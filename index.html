@@ -1,61 +1,78 @@
-// https://github.com/aroundworld26-cpu/lunch_check_app_temp.git //
 <!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🍱 우리 팀 점심 체크</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-database-compat.js"></script>
+
     <style>
-        /* 예쁘게 꾸미기 (미술 시간!) */
-        body { font-family: 'Arial', sans-serif; text-align: center; background-color: #f0f8ff; }
+        body { font-family: 'Arial', sans-serif; text-align: center; background-color: #f0f8ff; margin: 0; padding: 20px; }
         .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; max-width: 400px; margin: 20px auto; }
-        .day { padding: 15px; background: white; border: 1px solid #ddd; cursor: pointer; border-radius: 8px; }
+        .day { padding: 15px; background: white; border: 1px solid #ddd; cursor: pointer; border-radius: 8px; transition: 0.3s; }
         .day:hover { background-color: #e0f0ff; }
-        .selected { background-color: #ffcc00 !important; font-weight: bold; } /* 선택된 날은 노란색! */
+        .selected { background-color: #ffcc00 !important; font-weight: bold; border-color: #ffa500; }
         h1 { color: #333; }
-        #status { font-size: 1.2rem; color: #007bff; margin-top: 20px; }
+        #status { font-size: 1.2rem; color: #007bff; margin-top: 20px; font-weight: bold; }
+        .info { color: #666; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
     <h1>📅 3월 점심 식사 체크</h1>
-    <p>식사할 날짜를 눌러주세요! (30명 한정)</p>
+    <p class="info">식사할 날짜를 눌러 이름을 입력하세요!</p>
 
     <div class="calendar" id="calendar"></div>
-
     <div id="status">오늘의 총 인원: <span id="count">0</span>명</div>
 
     <script>
-        // 1. 달력 만들기 (1일부터 31일까지)
+        // 2. 정희님의 진짜 비밀 열쇠 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyB3G_qPJCu-J754PLBB0zETPsWIB8wi4H0",
+            authDomain: "lunch-check-app-temp.firebaseapp.com",
+            projectId: "lunch-check-app-temp",
+            storageBucket: "lunch-check-app-temp.firebasestorage.app",
+            messagingSenderId: "140909618699",
+            appId: "1:140909618699:web:15054d9f11d45bfc56890e",
+            measurementId: "G-F3VSX6TPE4",
+            databaseURL: "https://lunch-check-app-temp-default-rtdb.firebaseio.com" // 데이터베이스 주소 자동 추가
+        };
+
+        // 3. Firebase 시작하기
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
         const calendarDiv = document.getElementById('calendar');
         const countSpan = document.getElementById('count');
-        let totalCount = 0;
 
+        // 4. 달력 만들기 및 클릭 이벤트
         for (let i = 1; i <= 31; i++) {
             const dayDiv = document.createElement('div');
             dayDiv.classList.add('day');
+            dayDiv.id = 'day-' + i;
             dayDiv.innerText = i;
 
-            // 날짜를 클릭했을 때 일어나는 일
             dayDiv.onclick = function() {
                 const name = prompt(i + "일에 식사하시나요? 이름을 입력해주세요.");
-                
                 if (name) {
-                    this.classList.toggle('selected'); // 노란색으로 변신!
-                    alert(name + "님, " + i + "일 예약이 완료되었습니다!");
-                    
-                    // 여기에 나중에 Firebase 저장 마법 주문을 넣을 거예요!
-                    updateCount(1); 
+                    // Firebase 장부에 이름 저장하기!
+                    database.ref('lunch/' + i + '/' + name).set(true);
+                    alert(name + "님, " + i + "일 예약 완료!");
                 }
             };
             calendarDiv.appendChild(dayDiv);
         }
 
-        function updateCount(num) {
-            totalCount += num;
-            countSpan.innerText = totalCount;
-        }
+        // 5. [중요] 오늘 날짜 인원 실시간으로 가져오기
+        const today = new Date().getDate(); 
+        database.ref('lunch/' + today).on('value', (snapshot) => {
+            const data = snapshot.val();
+            const count = data ? Object.keys(data).length : 0;
+            countSpan.innerText = count;
+        });
     </script>
 
-    </body>
+</body>
 </html>
