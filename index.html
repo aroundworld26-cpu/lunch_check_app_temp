@@ -1,0 +1,61 @@
+// https://github.com/aroundworld26-cpu/lunch_check_app_temp.git //
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍱 우리 팀 점심 체크</title>
+    <style>
+        /* 예쁘게 꾸미기 (미술 시간!) */
+        body { font-family: 'Arial', sans-serif; text-align: center; background-color: #f0f8ff; }
+        .calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; max-width: 400px; margin: 20px auto; }
+        .day { padding: 15px; background: white; border: 1px solid #ddd; cursor: pointer; border-radius: 8px; }
+        .day:hover { background-color: #e0f0ff; }
+        .selected { background-color: #ffcc00 !important; font-weight: bold; } /* 선택된 날은 노란색! */
+        h1 { color: #333; }
+        #status { font-size: 1.2rem; color: #007bff; margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+    <h1>📅 3월 점심 식사 체크</h1>
+    <p>식사할 날짜를 눌러주세요! (30명 한정)</p>
+
+    <div class="calendar" id="calendar"></div>
+
+    <div id="status">오늘의 총 인원: <span id="count">0</span>명</div>
+
+    <script>
+        // 1. 달력 만들기 (1일부터 31일까지)
+        const calendarDiv = document.getElementById('calendar');
+        const countSpan = document.getElementById('count');
+        let totalCount = 0;
+
+        for (let i = 1; i <= 31; i++) {
+            const dayDiv = document.createElement('div');
+            dayDiv.classList.add('day');
+            dayDiv.innerText = i;
+
+            // 날짜를 클릭했을 때 일어나는 일
+            dayDiv.onclick = function() {
+                const name = prompt(i + "일에 식사하시나요? 이름을 입력해주세요.");
+                
+                if (name) {
+                    this.classList.toggle('selected'); // 노란색으로 변신!
+                    alert(name + "님, " + i + "일 예약이 완료되었습니다!");
+                    
+                    // 여기에 나중에 Firebase 저장 마법 주문을 넣을 거예요!
+                    updateCount(1); 
+                }
+            };
+            calendarDiv.appendChild(dayDiv);
+        }
+
+        function updateCount(num) {
+            totalCount += num;
+            countSpan.innerText = totalCount;
+        }
+    </script>
+
+    </body>
+</html>
