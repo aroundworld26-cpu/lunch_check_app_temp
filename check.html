@@ -123,6 +123,7 @@
         </div>
       </div>
 
+      <!-- 달력/월간 영역 통째로 숨김 처리: selectedStaffId가 없으면 이 영역이 보이지 않아야 함 -->
       <div class="card calendar-area calendar-area-hidden" id="calendarCard">
         <div class="calendar-header">
           <div class="calendar-title" id="calendarTitle">직원을 선택해주세요</div>
@@ -159,7 +160,6 @@
   </div>
 
   <script type="module">
-    // 🔥 Firebase 모듈 불러오기
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, collection, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -183,11 +183,12 @@
     const TODAY = 19; 
     const DAYS_IN_MONTH = 31; 
     const FIRST_DAY_INDEX = 0; 
-    let PUBLIC_HOLIDAYS = []; // API 로드 전 빈 배열
-
+    let PUBLIC_HOLIDAYS = []; 
     const CHOSUNG_LIST = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
     
-    // 🔥 더미 데이터 없이 완벽하게 빈 배열로 시작합니다.
+    // 🔥 "연도-월-오늘날짜" 형식의 고유 키 생성
+    const TODAY_KEY = `${TARGET_YEAR}-${TARGET_MONTH}-${TODAY}`;
+
     let staffData = [];
     let selectedStaffId = null; 
     let selectedChosung = '전체'; 
@@ -206,20 +207,12 @@
     const mainGroupCards = document.getElementsByClassName('main-group');
     const monthlyTotalCountEl = document.getElementById('monthlyTotalCount');
     const monthlyTotalBox = document.getElementById('monthlyTotalBox');
-    const resetBtn = document.getElementById('resetBtn');
     const calendarResetBtn = document.getElementById('calendarResetBtn');
 
-    // =========================================================
-    // 🔥 Firebase 실시간 연동 (Realtime Listener)
-    // =========================================================
     function listenToDB() {
       onSnapshot(collection(db, "staff"), (snapshot) => {
         const newData = [];
-        snapshot.forEach((doc) => {
-          newData.push({ id: doc.id, ...doc.data() });
-        });
-
-        // 관리자가 설정한 order 값으로 정렬
+        snapshot.forEach((doc) => { newData.push({ id: doc.id, ...doc.data() }); });
         newData.sort((a, b) => (a.order || 0) - (b.order || 0));
         staffData = newData;
 
@@ -232,31 +225,25 @@
       });
     }
 
-    // =========================================================
-    // 🔥 O/X 체크를 Firebase에 저장
-    // =========================================================
+    // 🔥 식사 체크 로직 완벽 수정 (연도-월-일 키값 사용)
     window.toggleAttendance = async function(staffId, day) {
       const staff = staffData.find(s => s.id === staffId);
-      const newAttendance = [...staff.attendance]; 
-      newAttendance[day] = !newAttendance[day]; 
+      const dateKey = `${TARGET_YEAR}-${TARGET_MONTH}-${day}`; // 예: "2026-3-19"
+      const newAttendance = { ...(staff.attendance || {}) }; 
+      newAttendance[dateKey] = !newAttendance[dateKey]; // O/X 반전
 
       try {
         await updateDoc(doc(db, "staff", String(staffId)), {
           attendance: newAttendance
         });
-        showToast(`${staff.name}님의 ${day}일 식사가 ${newAttendance[day] ? '등록' : '취소'}되었습니다.`);
-      } catch (error) {
-        console.error("DB 저장 실패:", error);
-        showToast("오류가 발생했습니다.");
-      }
+        showToast(`${staff.name}님의 ${TARGET_MONTH}월 ${day}일 식사가 ${newAttendance[dateKey] ? '등록' : '취소'}되었습니다.`);
+      } catch (error) { showToast("오류가 발생했습니다."); }
     };
 
-    // 공공데이터 연동
     async function fetchPublicHolidays(year, month) {
-      // ❗️ 기획자님의 실제 공공데이터 API 키로 변경하세요
       const API_KEY = "발급받은_API_키를_여기에_입력하세요"; 
       const monthStr = String(month).padStart(2, '0');
-      const url = `https://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getHoliDeInfo?solYear=${year}&solMonth=${monthStr}&ServiceKey=${API_KEY}&_type=json`;
+      const url = `https://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo?solYear=${year}&solMonth=${monthStr}&ServiceKey=${API_KEY}&_type=json`;
       try {
         if (API_KEY.includes("발급받은_API_키를")) return [1]; 
         const response = await fetch(url);
@@ -264,11 +251,8 @@
         const items = json.response?.body?.items?.item;
         if (!items) return []; 
         let holidays = [];
-        if (Array.isArray(items)) {
-          holidays = items.filter(item => item.isHoliday === "Y").map(item => parseInt(String(item.locdate).slice(-2), 10));
-        } else if (items.isHoliday === "Y") {
-          holidays.push(parseInt(String(items.locdate).slice(-2), 10));
-        }
+        if (Array.isArray(items)) { holidays = items.filter(item => item.isHoliday === "Y").map(item => parseInt(String(item.locdate).slice(-2), 10)); } 
+        else if (items.isHoliday === "Y") { holidays.push(parseInt(String(items.locdate).slice(-2), 10)); }
         return holidays;
       } catch (error) { return [1]; }
     }
@@ -282,10 +266,7 @@
 
     function getActiveConsonants() {
       const activeSet = new Set();
-      staffData.forEach(staff => {
-        const initial = getInitialConsonant(staff.name);
-        if (initial) activeSet.add(initial);
-      });
+      staffData.forEach(staff => { const initial = getInitialConsonant(staff.name); if (initial) activeSet.add(initial); });
       const sortedConsonants = Array.from(activeSet).sort((a, b) => CHOSUNG_LIST.indexOf(a) - CHOSUNG_LIST.indexOf(b));
       return ['전체', ...sortedConsonants];
     }
@@ -294,7 +275,6 @@
       consonantGroupEl.innerHTML = '';
       const activeConsonants = getActiveConsonants();
       if (!activeConsonants.includes(selectedChosung)) selectedChosung = '전체';
-
       activeConsonants.forEach(conso => {
         const btn = document.createElement('button');
         btn.className = `consonant-btn ${conso === selectedChosung ? 'active' : ''}`;
@@ -305,14 +285,19 @@
     }
 
     function updateTodayCount() {
-      const count = staffData.filter(staff => staff.attendance && staff.attendance[TODAY]).length;
+      // 오늘 날짜의 Key값으로 확인
+      const count = staffData.filter(staff => staff.attendance && staff.attendance[TODAY_KEY]).length;
       todayCountEl.textContent = count;
       totalStaffCountEl.textContent = staffData.length;
     }
 
+    // 오늘 식사 신청 직원 명단만, 직원 선택 X일 때만 표시
     function renderTodayStaffListArea() {
-      if (selectedStaffId !== null) { todayStaffContainer.style.display = 'none'; return; }
-      const eatingToday = staffData.filter(staff => staff.attendance && staff.attendance[TODAY]);
+      if (selectedStaffId !== null) {
+        todayStaffContainer.style.display = 'none';
+        return;
+      }
+      const eatingToday = staffData.filter(staff => staff.attendance && staff.attendance[TODAY_KEY]);
       if (eatingToday.length === 0) {
         todayStaffContainer.innerHTML = '<div style="color:#bdbdbd;font-weight:bold; font-size:1.05rem;">오늘 식사를 신청한 직원이 없습니다.</div>';
         todayStaffContainer.style.display = 'block';
@@ -337,7 +322,7 @@
         staffListEl.style.display = 'flex'; emptyMessage.style.display = 'none';
         filteredStaff.forEach(staff => {
           const li = document.createElement('li');
-          const isTodayEating = staff.attendance && staff.attendance[TODAY];
+          const isTodayEating = staff.attendance && staff.attendance[TODAY_KEY];
           li.className = `staff-item ${staff.id === selectedStaffId ? 'active' : ''}`;
           li.innerHTML = `<div><div class="staff-name">${staff.name}</div></div><div class="status-badge ${isTodayEating ? 'eating' : ''}">오늘 ${isTodayEating ? 'O' : 'X'}</div>`;
           li.addEventListener('click', () => {
@@ -348,19 +333,32 @@
       }
     }
 
+    // showMainState은 달력과 월간 합계를 직원이 선택됐을 때만 보이도록 조정
     function showMainState(showMain) {
       for (let el of mainGroupCards) {
-        if (showMain) el.classList.remove('main-state-hidden'); else el.classList.add('main-state-hidden');
+        if (showMain) el.classList.remove('main-state-hidden');
+        else el.classList.add('main-state-hidden');
       }
-      if (showMain) calendarCard.classList.remove('calendar-area-hidden');
+      // 직원 선택 X → 달력카드 완전히 숨김.
+      if (calendarCard) {
+        if (showMain) {
+          calendarCard.classList.add('calendar-area-hidden');
+        } else {
+          calendarCard.classList.remove('calendar-area-hidden');
+        }
+      }
     }
 
+    // 달력, 월간 식사 카운트, 뒤로가기 버튼 렌더링 제어
     function renderCalendar() {
       if (!selectedStaffId) {
-        calendarCard.classList.remove('calendar-area-hidden'); calendarTitleEl.innerHTML = "직원을 선택해주세요"; calendarGridEl.innerHTML = '';
-        monthlyTotalCountEl.textContent = 0; monthlyTotalBox.classList.remove('active'); renderTodayStaffListArea(); return;
+        calendarCard.classList.add('calendar-area-hidden');
+        // 오늘 식사 명단만 보이고, 달력/월간 카드/뒤로가기 모두 숨김!
+        renderTodayStaffListArea();
+        return;
       }
-      calendarCard.classList.remove('calendar-area-hidden'); todayStaffContainer.style.display = 'none';
+      calendarCard.classList.remove('calendar-area-hidden');
+      todayStaffContainer.style.display = 'none';
 
       const staff = staffData.find(s => s.id === selectedStaffId);
       if(!staff) return;
@@ -376,8 +374,8 @@
         const isWeekend = (currentDayIndex === 0 || currentDayIndex === 6); 
         const isHoliday = PUBLIC_HOLIDAYS.includes(day);
         const isClosed = isWeekend || isHoliday; 
-
-        const isChecked = staff.attendance && staff.attendance[day];
+        const dateKey = `${TARGET_YEAR}-${TARGET_MONTH}-${day}`;
+        const isChecked = staff.attendance && staff.attendance[dateKey];
         const isToday = (day === TODAY);
         const dayCell = document.createElement('div');
         
@@ -398,8 +396,13 @@
         calendarGridEl.appendChild(dayCell);
       }
 
+      // 월간 총 식사건수 업데이트
       monthlyTotalCountEl.textContent = monthlyCheckedCount;
       if(monthlyCheckedCount > 0) monthlyTotalBox.classList.add('active'); else monthlyTotalBox.classList.remove('active');
+
+      // 월간 합계/뒤로가기 표시
+      monthlyTotalBox.style.display = '';
+      if (calendarResetBtn) calendarResetBtn.style.display = '';
     }
 
     function showToast(msg) {
@@ -408,22 +411,50 @@
     }
 
     function goToInitState() {
-      selectedStaffId = null; selectedChosung = '전체'; showMainState(true);           
+      selectedStaffId = null; selectedChosung = '전체';
+      showMainState(true);           
       renderConsonantButtons(); updateTodayCount(); renderStaffList(); renderCalendar(); renderTodayStaffListArea();    
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    // 모듈 방식 스크립트에서는 window 객체에 할당해야 이벤트가 인식됩니다.
     window.goToInitState = goToInitState;
-    if (resetBtn) resetBtn.addEventListener('click', goToInitState);
-    if (calendarResetBtn) calendarResetBtn.addEventListener('click', goToInitState);
+    if (document.getElementById('resetBtn')) document.getElementById('resetBtn').addEventListener('click', goToInitState);
+    if (document.getElementById('calendarResetBtn')) document.getElementById('calendarResetBtn').addEventListener('click', goToInitState);
 
     async function initApp() {
       PUBLIC_HOLIDAYS = await fetchPublicHolidays(TARGET_YEAR, TARGET_MONTH);
-      listenToDB(); // 홀리데이 로드 완료 후 DB 리스너 시작!
+      listenToDB();
+    }
+    initApp();
+
+    // 초기 로드시 달력, 월간/뒤로가기 안 보이도록
+    document.addEventListener('DOMContentLoaded', function () {
+      // 달력/월간/뒤로가기 숨김 (직원 미선택 상태)
+      if (calendarCard) calendarCard.classList.add('calendar-area-hidden');
+      if (monthlyTotalBox) monthlyTotalBox.style.display = 'none';
+      if (calendarResetBtn) calendarResetBtn.style.display = 'none';
+    });
+
+    // 월간 합계와 뒤로가기도 직원이 선택되지 않은 경우 숨기기
+    function handleCalendarVisibility() {
+      if (!selectedStaffId) {
+        calendarCard.classList.add('calendar-area-hidden');
+        monthlyTotalBox.style.display = 'none';
+        if (calendarResetBtn) calendarResetBtn.style.display = 'none';
+      } else {
+        calendarCard.classList.remove('calendar-area-hidden');
+        monthlyTotalBox.style.display = '';
+        if (calendarResetBtn) calendarResetBtn.style.display = '';
+      }
     }
 
-    initApp();
+    // selectedStaffId 변경 시마다 호출되도록 renderCalendar에 반영
+    const origRenderCalendar = renderCalendar;
+    renderCalendar = function () {
+      origRenderCalendar.apply(this, arguments);
+      handleCalendarVisibility();
+    }
+
   </script>
 </body>
 </html>
