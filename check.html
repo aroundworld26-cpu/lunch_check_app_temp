@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>동물보호사업소 중식 관리</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  
+  <style>
+    * { box-sizing: border-box; }
+    html { touch-action: manipulation; }
+    body { background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #334155; margin: 0; padding: 20px; line-height: 1.5; min-height: 100dvh; }
+    .max-w-7xl { max-width: 1200px; margin: 0 auto; }
+    :root { --primary: #0d9488; --primary-light: #ccfbf1; --secondary: #f97316; --text-dark: #134e4a; }
+
+    .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; margin-top: 20px; }
+    .flex-col { display: flex; flex-direction: column; gap: 24px; height: auto; }
+    .card { background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+    
+    .card-title { font-size: 1.15rem; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 16px; border-bottom: 2px solid var(--primary-light); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
+    .summary-box { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; background: var(--primary-light); padding: 16px 20px; border-radius: 12px; border: 1px solid #99f6e4;}
+    .summary-label { font-size: 1rem; color: var(--primary); font-weight: 700; }
+    .summary-value { font-size: 2.5rem; font-weight: 800; color: var(--primary); line-height: 1; }
+    .total-staff { font-size: 1.1rem; color: #115e59; font-weight: bold; }
+
+    .monthly-total-box { margin-top: 15px; padding: 16px 20px; background: #f8fafc; border-radius: 12px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; border: 2px dashed #cbd5e1; transition: 0.3s;}
+    .monthly-total-box.active { background: #fff7ed; border-color: #fed7aa; }
+    .monthly-total-label { font-weight: bold; color: var(--text-dark); font-size: 1.05rem;}
+    .monthly-total-value { font-size: 1.8rem; font-weight: 800; color: var(--secondary); line-height: 1;}
+
+    .consonant-group { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; scrollbar-width: thin; scrollbar-color: #cbd5e1 #f8fafc; -webkit-overflow-scrolling: touch; }
+    .consonant-group::-webkit-scrollbar { height: 4px; }
+    .consonant-group::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+    .consonant-btn { flex-shrink: 0; padding: 6px 14px; border-radius: 20px; background: #f1f5f9; color: #64748b; font-weight: bold; font-size: 0.95rem; border: none; cursor: pointer; transition: 0.2s; outline: none; }
+    .consonant-btn:active { background: #bae6fd; color: #0ea5e9; }
+    .consonant-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 6px rgba(13, 148, 136, 0.3); }
+
+    .search-empty { text-align: center; padding: 30px 20px; color: #94a3b8; font-weight: bold; background: #f8fafc; border-radius: 12px; margin-top: 10px; font-size: 0.98rem;}
+    .staff-list-container { overflow-y: visible; max-height: none; overflow-x: auto; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
+    .staff-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: row; gap: 10px; width: max-content; padding-right: 20px;}
+    .staff-item { flex-direction: column; justify-content: center; text-align: center; gap: 8px; min-width: 82px; padding: 12px 10px; border: 1px solid transparent; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; transition: 0.2s; border-radius: 12px; background: #f8fafc; font-size: 0.98rem;}
+    .staff-item.active { background: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(13, 148, 136, 0.3);}
+    .staff-name { font-weight: 600; font-size: 0.95rem; word-break: keep-all; }
+    .status-badge { background: #e2e8f0; color: #475569; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; white-space: nowrap;}
+    .status-badge.eating { background: var(--secondary); color: white; }
+
+    .calendar-header { display: flex; justify-content: space-between; align-items: flex-start; flex-direction: column; gap: 6px; margin-bottom: 12px;}
+    .calendar-title { font-size: 1.05rem; font-weight: bold; color: var(--text-dark); }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+    .weekday { font-weight: bold; color: #64748b; padding-bottom: 8px; font-size: 0.8rem;}
+    .day-cell { aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: 0.2s; position: relative; width: 100%; font-size: 0.95rem;}
+    .day-number { font-size: 0.94rem; font-weight: 600; margin-bottom: 2px; color: #334155;}
+    .day-status { width: 22px; height: 22px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 0.75rem; font-weight: bold; background: #f1f5f9; color: #cbd5e1; }
+    
+    .day-cell.checked { background-color: #fff7ed; border-color: #fed7aa; }
+    .day-cell.checked .day-status { background-color: var(--secondary); color: white; }
+    .day-cell.checked .day-status::after { content: 'O'; }
+    .day-cell:not(.checked):not(.disabled) .day-status::after { content: 'X'; }
+    
+    .day-cell.disabled { background-color: #f8fafc; border-color: #f1f5f9; cursor: not-allowed; }
+    .day-cell.disabled .day-number { color: #cbd5e1 !important; }
+    .day-cell.disabled .day-status { background: transparent; color: #94a3b8; font-size: 0.85rem; width: auto; height: auto;}
+    .day-cell.disabled .day-status::after { content: '휴무'; } 
+    .day-cell.today { border: 2px solid var(--primary); }
+    .day-cell.today::before { content: '오늘'; position: absolute; top: -6px; font-size: 0.65rem; background: var(--primary); color: white; padding: 2px 5px; border-radius: 10px; font-weight: bold;}
+
+    .toast { position: fixed; bottom: 5vw; left: 4vw; right: 4vw; text-align: center; background: #334155; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; transform: translateY(150%); transition: 0.3s; z-index: 1000; max-width: 92vw;}
+    .toast.show { transform: translateY(0); }
+
+    #loadingOverlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: bold; color: var(--primary); font-size: 1.2rem; transition: 0.5s; }
+    .hidden { opacity: 0; pointer-events: none; }
+
+    .calendar-area-hidden { display: none !important; }
+    .main-state-hidden { display: none !important; }
+
+    .reset-btn { background: var(--primary-light); color: var(--primary); border: none; border-radius: 15px; padding: 10px 20px; font-size: 0.98rem; font-weight: bold; cursor: pointer; margin-top: 16px; transition: background 0.18s; outline: none; width: 100%; white-space: normal; word-break: keep-all; line-height: 1.4; display: block;}
+    .reset-btn:active { background: #34d399; color: #065f46;}
+    
+    @media (max-width: 768px) {
+      body { padding: 4vw 4vw 10vw 4vw; height: auto; }
+      .grid-container { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; max-width: 100vw; }
+      .card { padding: 5vw 4vw; border-radius: 12px; min-width: 0; overflow: visible; box-sizing: border-box;}
+      h1 { font-size: 1.2rem !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loadingOverlay">
+    <div style="font-size: 3rem; margin-bottom: 10px;">📡</div>
+    <div>데이터베이스 연동 중...</div>
+  </div>
+
+  <div id="toastMessage" class="toast">저장되었습니다.</div>
+
+  <div class="max-w-7xl">
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px; flex-wrap: wrap;">
+      <span style="font-size: 1.5rem;">🐾</span>
+      <h1 style="color: var(--text-dark); margin: 0; flex:1 1 auto;">동물보호사업소 구내식당 관리</h1>
+    </div>
+    <p style="color: #64748b; margin-top: 5px; font-size: 0.9rem;">직원용 일일/월간 점심 식사 체크</p>
+
+    <div class="grid-container">
+      
+      <div class="flex-col">
+        <div class="card main-group">
+          <div class="summary-box">
+            <div class="summary-label">오늘(19일) 총 식사 인원</div>
+            <div>
+              <span class="summary-value" id="todayCount">0</span>
+              <span class="total-staff">/ <span id="totalStaffCount">0</span>명</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="flex-grow: 1;">
+          <h2 class="card-title" style="font-size: 1rem;">내 이름 선택하기</h2>
+          <div class="consonant-group" id="consonantGroup"></div>
+          <div class="staff-list-container">
+            <ul class="staff-list" id="staffList"></ul>
+            <div id="emptyMessage" class="search-empty" style="display: none;">해당 초성의 직원이 없습니다. 😢</div>
+          </div>
+          <button class="reset-btn" id="resetBtn">초기화 및 오늘 식사 인원 보기</button>
+        </div>
+      </div>
+
+      <div class="card calendar-area calendar-area-hidden" id="calendarCard">
+        <div class="calendar-header">
+          <div class="calendar-title" id="calendarTitle">직원을 선택해주세요</div>
+          <div style="color: #64748b; font-weight: bold; font-size: 0.9rem;">2026년 3월</div>
+        </div>
+        
+        <div class="calendar-grid" style="margin-bottom: 8px;">
+          <div class="weekday" style="color: #ef4444;">일</div>
+          <div class="weekday">월</div>
+          <div class="weekday">화</div>
+          <div class="weekday">수</div>
+          <div class="weekday">목</div>
+          <div class="weekday">금</div>
+          <div class="weekday" style="color: var(--primary);">토</div>
+        </div>
+
+        <div class="calendar-grid" id="calendarGrid"></div>
+        
+        <div id="monthlyTotalBox" class="monthly-total-box">
+          <span class="monthly-total-label">이번 달 내 총 식사 신청 수</span>
+          <div>
+            <span class="monthly-total-value" id="monthlyTotalCount">0</span>
+            <span style="font-weight: bold; color: #94a3b8; font-size: 1.1rem; margin-left: 2px;">일 (식)</span>
+          </div>
+        </div>
+        
+        <div style="margin-top: 15px; text-align: center; color: #94a3b8; font-size: 0.85rem;">
+          💡 휴무일(주말 및 공휴일)은 터치할 수 없습니다.
+        </div>
+        <div id="todayStaffContainer" style="margin-top: 20px; text-align: center;"></div>
+        <button class="reset-btn" id="calendarResetBtn">뒤로 가기 (다른 직원 선택)</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // 🔥 Firebase 모듈 불러오기
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // ❗️ 여기에 기획자님의 Firebase 설정값을 덮어쓰세요!
+    const firebaseConfig = {
+        apiKey: "AIzaSyB3G_qPJCu-J754PLBB0zETPsWIB8wi4H0",
+        authDomain: "lunch-check-app-temp.firebaseapp.com",
+        projectId: "lunch-check-app-temp",
+        storageBucket: "lunch-check-app-temp.firebasestorage.app",
+        messagingSenderId: "140909618699",
+        appId: "1:140909618699:web:15054d9f11d45bfc56890e",
+        measurementId: "G-F3VSX6TPE4",
+        databaseURL: "https://lunch-check-app-temp-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    const TARGET_YEAR = 2026;
+    const TARGET_MONTH = 3;
+    const TODAY = 19; 
+    const DAYS_IN_MONTH = 31; 
+    const FIRST_DAY_INDEX = 0; 
+    let PUBLIC_HOLIDAYS = []; // API 로드 전 빈 배열
+
+    const CHOSUNG_LIST = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+    
+    // 🔥 더미 데이터 없이 완벽하게 빈 배열로 시작합니다.
+    let staffData = [];
+    let selectedStaffId = null; 
+    let selectedChosung = '전체'; 
+
+    const staffListEl = document.getElementById('staffList');
+    const calendarGridEl = document.getElementById('calendarGrid');
+    const calendarTitleEl = document.getElementById('calendarTitle');
+    const todayCountEl = document.getElementById('todayCount');
+    const totalStaffCountEl = document.getElementById('totalStaffCount');
+    const toastMessage = document.getElementById('toastMessage');
+    const consonantGroupEl = document.getElementById('consonantGroup');
+    const emptyMessage = document.getElementById('emptyMessage');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const calendarCard = document.getElementById('calendarCard');
+    const todayStaffContainer = document.getElementById('todayStaffContainer');
+    const mainGroupCards = document.getElementsByClassName('main-group');
+    const monthlyTotalCountEl = document.getElementById('monthlyTotalCount');
+    const monthlyTotalBox = document.getElementById('monthlyTotalBox');
+    const resetBtn = document.getElementById('resetBtn');
+    const calendarResetBtn = document.getElementById('calendarResetBtn');
+
+    // =========================================================
+    // 🔥 Firebase 실시간 연동 (Realtime Listener)
+    // =========================================================
+    function listenToDB() {
+      onSnapshot(collection(db, "staff"), (snapshot) => {
+        const newData = [];
+        snapshot.forEach((doc) => {
+          newData.push({ id: doc.id, ...doc.data() });
+        });
+
+        // 관리자가 설정한 order 값으로 정렬
+        newData.sort((a, b) => (a.order || 0) - (b.order || 0));
+        staffData = newData;
+
+        loadingOverlay.classList.add('hidden');
+        renderConsonantButtons();
+        updateTodayCount();
+        renderStaffList();
+        renderCalendar();
+        renderTodayStaffListArea();
+      });
+    }
+
+    // =========================================================
+    // 🔥 O/X 체크를 Firebase에 저장
+    // =========================================================
+    window.toggleAttendance = async function(staffId, day) {
+      const staff = staffData.find(s => s.id === staffId);
+      const newAttendance = [...staff.attendance]; 
+      newAttendance[day] = !newAttendance[day]; 
+
+      try {
+        await updateDoc(doc(db, "staff", String(staffId)), {
+          attendance: newAttendance
+        });
+        showToast(`${staff.name}님의 ${day}일 식사가 ${newAttendance[day] ? '등록' : '취소'}되었습니다.`);
+      } catch (error) {
+        console.error("DB 저장 실패:", error);
+        showToast("오류가 발생했습니다.");
+      }
+    };
+
+    // 공공데이터 연동
+    async function fetchPublicHolidays(year, month) {
+      // ❗️ 기획자님의 실제 공공데이터 API 키로 변경하세요
+      const API_KEY = "발급받은_API_키를_여기에_입력하세요"; 
+      const monthStr = String(month).padStart(2, '0');
+      const url = `https://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getHoliDeInfo?solYear=${year}&solMonth=${monthStr}&ServiceKey=${API_KEY}&_type=json`;
+      try {
+        if (API_KEY.includes("발급받은_API_키를")) return [1]; 
+        const response = await fetch(url);
+        const json = await response.json();
+        const items = json.response?.body?.items?.item;
+        if (!items) return []; 
+        let holidays = [];
+        if (Array.isArray(items)) {
+          holidays = items.filter(item => item.isHoliday === "Y").map(item => parseInt(String(item.locdate).slice(-2), 10));
+        } else if (items.isHoliday === "Y") {
+          holidays.push(parseInt(String(items.locdate).slice(-2), 10));
+        }
+        return holidays;
+      } catch (error) { return [1]; }
+    }
+
+    function getInitialConsonant(name) {
+      if (!name) return "";
+      const code = name.charCodeAt(0) - 44032; 
+      if (code > -1 && code < 11172) return CHOSUNG_LIST[Math.floor(code / 588)];
+      return name.charAt(0);
+    }
+
+    function getActiveConsonants() {
+      const activeSet = new Set();
+      staffData.forEach(staff => {
+        const initial = getInitialConsonant(staff.name);
+        if (initial) activeSet.add(initial);
+      });
+      const sortedConsonants = Array.from(activeSet).sort((a, b) => CHOSUNG_LIST.indexOf(a) - CHOSUNG_LIST.indexOf(b));
+      return ['전체', ...sortedConsonants];
+    }
+
+    function renderConsonantButtons() {
+      consonantGroupEl.innerHTML = '';
+      const activeConsonants = getActiveConsonants();
+      if (!activeConsonants.includes(selectedChosung)) selectedChosung = '전체';
+
+      activeConsonants.forEach(conso => {
+        const btn = document.createElement('button');
+        btn.className = `consonant-btn ${conso === selectedChosung ? 'active' : ''}`;
+        btn.textContent = conso;
+        btn.addEventListener('click', () => { selectedChosung = conso; renderConsonantButtons(); renderStaffList(); });
+        consonantGroupEl.appendChild(btn);
+      });
+    }
+
+    function updateTodayCount() {
+      const count = staffData.filter(staff => staff.attendance && staff.attendance[TODAY]).length;
+      todayCountEl.textContent = count;
+      totalStaffCountEl.textContent = staffData.length;
+    }
+
+    function renderTodayStaffListArea() {
+      if (selectedStaffId !== null) { todayStaffContainer.style.display = 'none'; return; }
+      const eatingToday = staffData.filter(staff => staff.attendance && staff.attendance[TODAY]);
+      if (eatingToday.length === 0) {
+        todayStaffContainer.innerHTML = '<div style="color:#bdbdbd;font-weight:bold; font-size:1.05rem;">오늘 식사를 신청한 직원이 없습니다.</div>';
+        todayStaffContainer.style.display = 'block';
+        return;
+      }
+      let listHtml = '<div style="font-weight: bold; color: var(--secondary); margin-bottom: 10px; font-size: 1.01rem;">오늘 식사 신청 직원 명단</div><div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:3px;">' +
+        eatingToday.map(staff => `<div style="padding:6px 15px;border-radius:25px;background:#fef9c3;color:#a16207;border:1.5px solid #fde047;font-size:0.95rem; font-weight:600;word-break:keep-all;">${staff.name}</div>`).join('') + '</div>';
+      todayStaffContainer.innerHTML = listHtml;
+      todayStaffContainer.style.display = 'block';
+    }
+
+    function renderStaffList() {
+      staffListEl.innerHTML = '';
+      const filteredStaff = staffData.filter(staff => {
+        if (selectedChosung === '전체') return true;
+        return getInitialConsonant(staff.name) === selectedChosung;
+      });
+
+      if(filteredStaff.length === 0) {
+        staffListEl.style.display = 'none'; emptyMessage.style.display = 'block';
+      } else {
+        staffListEl.style.display = 'flex'; emptyMessage.style.display = 'none';
+        filteredStaff.forEach(staff => {
+          const li = document.createElement('li');
+          const isTodayEating = staff.attendance && staff.attendance[TODAY];
+          li.className = `staff-item ${staff.id === selectedStaffId ? 'active' : ''}`;
+          li.innerHTML = `<div><div class="staff-name">${staff.name}</div></div><div class="status-badge ${isTodayEating ? 'eating' : ''}">오늘 ${isTodayEating ? 'O' : 'X'}</div>`;
+          li.addEventListener('click', () => {
+            selectedStaffId = staff.id; showMainState(false); renderStaffList(); renderCalendar(); renderTodayStaffListArea(); 
+          });
+          staffListEl.appendChild(li);
+        });
+      }
+    }
+
+    function showMainState(showMain) {
+      for (let el of mainGroupCards) {
+        if (showMain) el.classList.remove('main-state-hidden'); else el.classList.add('main-state-hidden');
+      }
+      if (showMain) calendarCard.classList.remove('calendar-area-hidden');
+    }
+
+    function renderCalendar() {
+      if (!selectedStaffId) {
+        calendarCard.classList.remove('calendar-area-hidden'); calendarTitleEl.innerHTML = "직원을 선택해주세요"; calendarGridEl.innerHTML = '';
+        monthlyTotalCountEl.textContent = 0; monthlyTotalBox.classList.remove('active'); renderTodayStaffListArea(); return;
+      }
+      calendarCard.classList.remove('calendar-area-hidden'); todayStaffContainer.style.display = 'none';
+
+      const staff = staffData.find(s => s.id === selectedStaffId);
+      if(!staff) return;
+
+      calendarTitleEl.innerHTML = `<span style="color: var(--primary);">${staff.name}</span>님의 이번 달 식사`;
+      calendarGridEl.innerHTML = '';
+      let monthlyCheckedCount = 0;
+
+      for(let i = 0; i < FIRST_DAY_INDEX; i++) calendarGridEl.appendChild(document.createElement('div'));
+
+      for(let day = 1; day <= DAYS_IN_MONTH; day++) {
+        const currentDayIndex = (day - 1 + FIRST_DAY_INDEX) % 7;
+        const isWeekend = (currentDayIndex === 0 || currentDayIndex === 6); 
+        const isHoliday = PUBLIC_HOLIDAYS.includes(day);
+        const isClosed = isWeekend || isHoliday; 
+
+        const isChecked = staff.attendance && staff.attendance[day];
+        const isToday = (day === TODAY);
+        const dayCell = document.createElement('div');
+        
+        if(isChecked && !isClosed) monthlyCheckedCount++;
+
+        if(isClosed) {
+          dayCell.className = `day-cell disabled`;
+          let dateColor = '';
+          if(currentDayIndex === 0 || isHoliday) dateColor = 'color: #fca5a5;'; 
+          else if(currentDayIndex === 6) dateColor = 'color: #93c5fd;'; 
+          dayCell.innerHTML = `<div class="day-number" style="${dateColor}">${day}</div><div class="day-status"></div>`;
+        } 
+        else {
+          dayCell.className = `day-cell ${isChecked ? 'checked' : ''} ${isToday ? 'today' : ''}`;
+          dayCell.innerHTML = `<div class="day-number">${day}</div><div class="day-status"></div>`;
+          dayCell.addEventListener('click', () => window.toggleAttendance(staff.id, day));
+        }
+        calendarGridEl.appendChild(dayCell);
+      }
+
+      monthlyTotalCountEl.textContent = monthlyCheckedCount;
+      if(monthlyCheckedCount > 0) monthlyTotalBox.classList.add('active'); else monthlyTotalBox.classList.remove('active');
+    }
+
+    function showToast(msg) {
+      toastMessage.textContent = msg; toastMessage.classList.add('show');
+      setTimeout(() => toastMessage.classList.remove('show'), 2000);
+    }
+
+    function goToInitState() {
+      selectedStaffId = null; selectedChosung = '전체'; showMainState(true);           
+      renderConsonantButtons(); updateTodayCount(); renderStaffList(); renderCalendar(); renderTodayStaffListArea();    
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 모듈 방식 스크립트에서는 window 객체에 할당해야 이벤트가 인식됩니다.
+    window.goToInitState = goToInitState;
+    if (resetBtn) resetBtn.addEventListener('click', goToInitState);
+    if (calendarResetBtn) calendarResetBtn.addEventListener('click', goToInitState);
+
+    async function initApp() {
+      PUBLIC_HOLIDAYS = await fetchPublicHolidays(TARGET_YEAR, TARGET_MONTH);
+      listenToDB(); // 홀리데이 로드 완료 후 DB 리스너 시작!
+    }
+
+    initApp();
+  </script>
+</body>
+</html>
