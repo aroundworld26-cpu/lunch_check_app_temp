@@ -40,19 +40,35 @@
     .calendar-title { font-size: 1.05rem; font-weight: bold; color: var(--text-dark); }
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
     .weekday { font-weight: bold; color: #64748b; padding-bottom: 8px; font-size: 0.8rem;}
-    .day-cell { aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: 0.2s; position: relative; width: 100%; font-size: 0.95rem;}
-    .day-number { font-size: 0.94rem; font-weight: 600; margin-bottom: 2px; color: #334155;}
-    .day-status { width: 22px; height: 22px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 0.75rem; font-weight: bold; background: #f1f5f9; color: #cbd5e1; }
+    /* 달력 일자(날짜 셀) 크기를 90%로 축소: 기존 값 대비 0.9배 적용 */
+    .day-cell { 
+      aspect-ratio: 1; 
+      display: flex; flex-direction: column; justify-content: center; align-items: center; 
+      border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; transition: 0.2s; 
+      position: relative; 
+      width: 90%; 
+      font-size: 0.86rem; /* 기존 0.95rem → 0.86rem(약 90%) */
+      min-width: 24px; /* 안전하게 최소값 지정 (모바일 가독성 고려) */
+      min-height: 24px;
+      margin: auto;
+    }
+    .day-number { font-size: 0.85rem; font-weight: 600; margin-bottom: 2px; color: #334155;} /* 기존 0.94rem → 0.85rem */
+    .day-status { 
+      width: 19.8px; height: 19.8px; /* 기존 22px → 19.8px (90%) */
+      border-radius: 50%; display: flex; justify-content: center; align-items: center; 
+      font-size: 0.675rem; /* 기존 0.75rem → 약 0.675rem */
+      font-weight: bold; background: #f1f5f9; color: #cbd5e1; 
+    }
     .day-cell.checked { background-color: #fff7ed; border-color: #fed7aa; }
     .day-cell.checked .day-status { background-color: var(--secondary); color: white; }
     .day-cell.checked .day-status::after { content: 'O'; }
     .day-cell:not(.checked):not(.disabled) .day-status::after { content: 'X'; }
     .day-cell.disabled { background-color: #f8fafc; border-color: #f1f5f9; cursor: not-allowed; }
     .day-cell.disabled .day-number { color: #cbd5e1 !important; }
-    .day-cell.disabled .day-status { background: transparent; color: #94a3b8; font-size: 0.85rem; width: auto; height: auto;}
+    .day-cell.disabled .day-status { background: transparent; color: #94a3b8; font-size: 0.765rem; width: auto; height: auto;} /* 0.85*0.9=0.765 */
     .day-cell.disabled .day-status::after { content: '휴무'; } 
     .day-cell.today { border: 2px solid var(--primary); }
-    .day-cell.today::before { content: '오늘'; position: absolute; top: -6px; font-size: 0.65rem; background: var(--primary); color: white; padding: 2px 5px; border-radius: 10px; font-weight: bold;}
+    .day-cell.today::before { content: '오늘'; position: absolute; top: -6px; font-size: 0.585rem; background: var(--primary); color: white; padding: 2px 5px; border-radius: 10px; font-weight: bold;}
     .toast { position: fixed; bottom: 5vw; left: 4vw; right: 4vw; text-align: center; background: #334155; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; transform: translateY(150%); transition: 0.3s; z-index: 1000; max-width: 92vw;}
     .toast.show { transform: translateY(0); }
     #loadingOverlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: bold; color: var(--primary); font-size: 1.2rem; transition: 0.5s; }
@@ -66,6 +82,10 @@
       .grid-container { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; max-width: 100vw; }
       .card { padding: 5vw 4vw; border-radius: 12px; min-width: 0; overflow: visible; box-sizing: border-box;}
       h1 { font-size: 1.2rem !important; }
+      .calendar-grid { gap: 2px; }
+      .day-cell { width: 90%; font-size: 0.78rem; min-width: 22px; min-height: 22px; } /* 모바일에서 비율 동일, 더 작게 */
+      .day-number { font-size: 0.76rem; }
+      .day-status { width: 17.8px; height: 17.8px; font-size: 0.59rem; }
     }
   </style>
 </head>
@@ -109,6 +129,8 @@
       </div>
 
       <div class="card calendar-area calendar-area-hidden" id="calendarCard">
+        <!-- 오늘 식사 신청 직원 명단 영역을 calendar-header보다 위로 위치! -->
+        <div id="todayStaffContainer" style="margin-bottom: 15px; text-align: center;"></div>
         <div class="calendar-header">
           <div class="calendar-title" id="calendarTitle">직원을 선택해주세요</div>
           <div style="color: #64748b; font-weight: bold; font-size: 0.9rem;">2026년 3월</div>
@@ -134,7 +156,6 @@
         </div>
         
         <div style="margin-top: 15px; text-align: center; color: #94a3b8; font-size: 0.85rem;">💡 휴무일(주말 및 공휴일)은 터치할 수 없습니다.</div>
-        <div id="todayStaffContainer" style="margin-top: 20px; text-align: center;"></div>
         <button class="reset-btn" id="calendarResetBtn">뒤로 가기 (다른 직원 선택)</button>
       </div>
     </div>
