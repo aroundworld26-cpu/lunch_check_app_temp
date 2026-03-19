@@ -4,74 +4,54 @@
   <meta charset="UTF-8" />
   <title>동물보호사업소 식수 관리자</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  
   <style>
     * { box-sizing: border-box; }
     body { background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #334155; margin: 0; padding: 20px; line-height: 1.5; }
     .max-w-7xl { max-width: 1400px; margin: 0 auto; } 
     :root { --primary: #0d9488; --primary-light: #ccfbf1; --secondary: #f97316; --text-dark: #134e4a; --danger: #ef4444; }
-
     .navbar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 24px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 24px;}
     .nav-title { display: flex; align-items: center; gap: 10px; margin: 0; color: var(--text-dark); font-size: 1.4rem; font-weight: bold;}
     .nav-links a { text-decoration: none; color: white; background: var(--primary); padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.95rem; transition: 0.2s;}
     .nav-links a:hover { background: #0f766e; }
-
     .grid-container { display: grid; grid-template-columns: 360px 1fr; gap: 24px; align-items: start; }
     @media (max-width: 1024px) { .grid-container { grid-template-columns: 1fr; } }
-    
     .card { background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column;}
     .card-title { font-size: 1.15rem; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid var(--primary-light); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
-    
     .form-group { display: flex; gap: 8px; margin-bottom: 16px; }
     .input-field { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; transition: 0.2s;}
     .input-field:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.1); }
     .btn-add { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap;}
     .btn-add:hover { background: #0f766e; }
-
     .btn-excel { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap;}
     .btn-excel:hover { background: #dcfce7; }
-
     .staff-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; max-height: 600px; border: 1px solid #e2e8f0; border-radius: 8px;}
     .staff-list::-webkit-scrollbar { width: 6px; }
     .staff-list::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
-    
     .staff-item { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: white; transition: background 0.2s;}
     .staff-item:hover { background: #f8fafc; }
     .staff-info { display: flex; flex-direction: column; flex-grow: 1;}
     .staff-name { font-weight: bold; font-size: 1.05rem; color: #334155;}
-    
-    /* 추가: 이름 수정 버튼 및 인풋 스타일 */
-    .btn-edit { background: #ede9fe; color: #7c3aed; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s; margin-left: 4px; }
-    .btn-edit:hover { background: #c7d2fe; }
-    .edit-input { padding: 6px 8px; border: 1px solid #a5b4fc; border-radius: 6px; font-size: 1rem; margin-right: 6px; outline: none; min-width: 60px; }
-    .edit-input:focus { border-color: var(--primary); }
-
     .staff-actions { display: flex; gap: 4px; align-items: center; }
     .btn-move { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
     .btn-move:hover:not(:disabled) { background: #e2e8f0; color: var(--primary); border-color: #cbd5e1;}
     .btn-move:disabled { opacity: 0.3; cursor: not-allowed; }
     .btn-delete { background: #fee2e2; color: var(--danger); border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s; margin-left: 4px;}
     .btn-delete:hover { background: #fecaca; }
-
     .period-selector { display: flex; align-items: center; gap: 20px; background: #f8fafc; padding: 8px 24px; border-radius: 30px; border: 2px solid #e2e8f0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);}
     .period-text { font-size: 1.3rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; min-width: 100px; text-align: center;}
     .period-btn { background: white; border: 2px solid #cbd5e1; border-radius: 50%; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; cursor: pointer; color: #475569; font-weight: 900; font-size: 1.1rem; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
     .period-btn:hover { background: var(--primary); color: white; border-color: var(--primary); transform: scale(1.05);}
-
     .table-container { overflow-x: auto; overflow-y: auto; max-height: 650px; border: 1px solid #e2e8f0; border-radius: 8px; white-space: nowrap; }
     .table-container::-webkit-scrollbar { width: 8px; height: 8px; }
     .table-container::-webkit-scrollbar-thumb { background-color: #94a3b8; border-radius: 4px; }
-    
     table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: center; font-size: 0.9rem; }
     th { background-color: #f8fafc; color: #475569; font-weight: 600; padding: 12px 8px; border-bottom: 2px solid #e2e8f0; border-right: 1px solid #f1f5f9;}
     td { padding: 10px 8px; border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; color: #334155; }
     th.sticky-col, td.sticky-col { position: sticky; left: 0; background-color: white; z-index: 1; border-right: 2px solid #cbd5e1; font-weight: bold;}
     th.sticky-col { background-color: #f8fafc; z-index: 3; }
-    
     .cell-o { color: var(--primary); font-weight: bold; }
     .cell-x { color: #cbd5e1; }
     .cell-subtotal { background: #f1f5f9; font-weight: bold; color: var(--text-dark); }
-    
     .toast { position: fixed; bottom: 20px; right: 20px; background: #334155; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; transform: translateY(150%); transition: 0.3s; z-index: 1000;}
     .toast.show { transform: translateY(0); }
   </style>
@@ -87,7 +67,6 @@
     </div>
 
     <div class="grid-container">
-      
       <div class="card">
         <h2 class="card-title">
           직원 명부 관리
@@ -115,11 +94,7 @@
             </div>
           </div>
         </div>
-
-        <div style="margin-bottom: 15px; color: #64748b; font-size: 0.85rem;">
-          💡 주말 및 공휴일을 제외한 <strong>실제 평일</strong>만 표시됩니다. 좌측 명부에서 <strong>▲▼ 버튼</strong>을 누르면 표의 순서도 변경됩니다.
-        </div>
-
+        <div style="margin-bottom: 15px; color: #64748b; font-size: 0.85rem;">💡 주말 및 공휴일을 제외한 <strong>실제 평일</strong>만 표시됩니다.</div>
         <div class="table-container">
           <table>
             <thead id="statsTableHead" style="position: sticky; top: 0; z-index: 2;"></thead>
@@ -131,9 +106,8 @@
   </div>
 
   <script type="module">
-    // 🔥 Firebase 모듈 불러오기
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     // ❗️ 여기에 기획자님의 Firebase 설정값을 덮어쓰세요!
     const firebaseConfig = {
@@ -152,16 +126,9 @@
 
     let viewYear = 2026;
     let viewMonth = 3;
-    const DAYS_IN_MONTH = 31; 
-    const FIRST_DAY_INDEX = 0; 
-    let PUBLIC_HOLIDAYS = [1, 2]; 
+    let PUBLIC_HOLIDAYS = [1, 2]; // 기본 휴일 설정
 
-    // 🔥 더미 데이터 없이 빈 배열로 시작!
     let adminStaffData = [];
-
-    // 이름 수정 모드 관리를 위한 State
-    let editingStaffId = null;
-    let editingStaffValue = "";
 
     const adminStaffListEl = document.getElementById('adminStaffList');
     const statsTableHeadEl = document.getElementById('statsTableHead');
@@ -170,44 +137,28 @@
     const currentMonthTextEl = document.getElementById('currentMonthText');
     const toastMessage = document.getElementById('toastMessage');
 
-    // =========================================================================
-    // 🔥 [핵심] Firestore 데이터 실시간 감지 (관리자 화면)
-    // =========================================================================
     function listenToDB() {
       onSnapshot(collection(db, "staff"), (snapshot) => {
         const newData = [];
-        snapshot.forEach((doc) => {
-          newData.push({ id: doc.id, ...doc.data() });
-        });
-        
-        // 순서 정렬
+        snapshot.forEach((doc) => { newData.push({ id: doc.id, ...doc.data() }); });
         newData.sort((a, b) => (a.order || 0) - (b.order || 0));
         adminStaffData = newData;
-
-        // 에디팅 중인 항목에 상관없이 DB 갱신 시 edit 모드 해제
-        editingStaffId = null;
-        editingStaffValue = "";
-
         renderAdminStaffList();
       });
     }
 
-    // =========================================================================
-    // 🔥 직원 CRUD 및 순서 이동 (Firestore 쓰기)
-    // =========================================================================
     window.addStaff = async function() {
       const nameInput = document.getElementById('newName');
       const name = nameInput.value.trim();
       if (!name) { showToast("이름을 입력해주세요."); return; }
 
-      // 고유 ID 생성 및 새 직원을 맨 위에 추가하기 위한 순서(order) 계산
       const newId = "staff_" + Date.now();
       const newOrder = adminStaffData.length > 0 ? (adminStaffData[0].order || 0) - 1 : 0; 
 
       const newStaff = {
         name: name,
         order: newOrder,
-        attendance: Array(DAYS_IN_MONTH + 1).fill(false) 
+        attendance: {} // 🔥 새 직원은 깨끗한 객체로 생성!
       };
       
       try {
@@ -229,78 +180,14 @@
     window.moveStaff = async function(currentIndex, direction) {
       const targetIndex = currentIndex + direction;
       if (targetIndex < 0 || targetIndex >= adminStaffData.length) return;
-
       const staffA = adminStaffData[currentIndex];
       const staffB = adminStaffData[targetIndex];
-
-      // 두 직원의 order 값을 서로 교환 (Batch 통신으로 한 번에 안전하게 저장)
       const batch = writeBatch(db);
       batch.update(doc(db, "staff", String(staffA.id)), { order: staffB.order || 0 });
       batch.update(doc(db, "staff", String(staffB.id)), { order: staffA.order || 0 });
-
-      try { await batch.commit(); } 
-      catch(e) { console.error("순서 변경 실패:", e); }
+      try { await batch.commit(); } catch(e) { console.error("순서 변경 실패:", e); }
     };
 
-    // ==============================
-    // 이름 수정 함수
-    // ==============================
-    window.editStaffStart = function(id, currentName) {
-      editingStaffId = id;
-      editingStaffValue = currentName;
-      renderAdminStaffList();
-      // 수정 input에 포커스 및 선택
-      setTimeout(() => {
-        const inp = document.getElementById('edit-input-' + id);
-        if (inp) {
-          inp.focus();
-          inp.select();
-        }
-      }, 0);
-    };
-
-    window.editStaffChange = function(e) {
-      editingStaffValue = e.target.value;
-    };
-
-    window.editStaffKeydown = function(e, id, originalName) {
-      if (e.key === 'Enter') {
-        window.editStaffSave(id);
-      } else if (e.key === 'Escape') {
-        editingStaffId = null;
-        editingStaffValue = "";
-        renderAdminStaffList();
-      }
-    };
-
-    window.editStaffSave = async function(id) {
-      const newName = (editingStaffValue || "").trim();
-      if (!newName) {
-        showToast("이름을 입력해주세요.");
-        return;
-      }
-      try {
-        await updateDoc(doc(db, "staff", String(id)), { name: newName });
-        showToast("직원 이름이 변경되었습니다.");
-      } catch(e) { 
-        showToast("이름 수정 중 오류가 발생했습니다.");
-        console.error(e); 
-      } finally {
-        editingStaffId = null;
-        editingStaffValue = "";
-        renderAdminStaffList();
-      }
-    };
-
-    window.editStaffCancel = function() {
-      editingStaffId = null;
-      editingStaffValue = "";
-      renderAdminStaffList();
-    };
-
-    // =========================================================================
-    // UI 렌더링 함수들 
-    // =========================================================================
     function renderAdminStaffList() {
       adminStaffListEl.innerHTML = '';
       staffCountEl.textContent = adminStaffData.length;
@@ -316,41 +203,15 @@
         li.className = 'staff-item';
         const isFirst = index === 0;
         const isLast = index === adminStaffData.length - 1;
-        // 이름 수정모드인 경우 인풋 및 버튼 렌더
-        if (editingStaffId === staff.id) {
-          li.innerHTML = `
-            <div class="staff-info">
-              <input
-                type="text"
-                id="edit-input-${staff.id}"
-                class="edit-input"
-                value="${editingStaffValue.replace(/"/g,'&quot;')}"
-                oninput="window.editStaffChange(event)"
-                onkeydown="window.editStaffKeydown(event, '${staff.id}', '${staff.name.replace(/'/g,"\\'")}')"
-                maxlength="20"
-              />
-            </div>
-            <div class="staff-actions">
-              <button class="btn-edit" onclick="window.editStaffSave('${staff.id}')">저장</button>
-              <button class="btn-move" onclick="window.moveStaff(${index}, -1)" ${isFirst ? 'disabled' : ''} title="위로">▲</button>
-              <button class="btn-move" onclick="window.moveStaff(${index}, 1)" ${isLast ? 'disabled' : ''} title="아래로">▼</button>
-              <button class="btn-edit" onclick="window.editStaffCancel()">취소</button>
-              <button class="btn-delete" onclick="window.deleteStaff('${staff.id}', '${staff.name.replace(/'/g,"\\'")}')">삭제</button>
-            </div>
-          `;
-        } else {
-          li.innerHTML = `
-            <div class="staff-info">
-              <span class="staff-name">${staff.name}</span>
-            </div>
-            <div class="staff-actions">
-              <button class="btn-edit" onclick="window.editStaffStart('${staff.id}', '${staff.name.replace(/'/g,"\\'")}')">수정</button>
-              <button class="btn-move" onclick="window.moveStaff(${index}, -1)" ${isFirst ? 'disabled' : ''} title="위로">▲</button>
-              <button class="btn-move" onclick="window.moveStaff(${index}, 1)" ${isLast ? 'disabled' : ''} title="아래로">▼</button>
-              <button class="btn-delete" onclick="window.deleteStaff('${staff.id}', '${staff.name.replace(/'/g,"\\'")}')">삭제</button>
-            </div>
-          `;
-        }
+
+        li.innerHTML = `
+          <div class="staff-info"><span class="staff-name">${staff.name}</span></div>
+          <div class="staff-actions">
+            <button class="btn-move" onclick="window.moveStaff(${index}, -1)" ${isFirst ? 'disabled' : ''} title="위로">▲</button>
+            <button class="btn-move" onclick="window.moveStaff(${index}, 1)" ${isLast ? 'disabled' : ''} title="아래로">▼</button>
+            <button class="btn-delete" onclick="window.deleteStaff('${staff.id}', '${staff.name}')">삭제</button>
+          </div>
+        `;
         adminStaffListEl.appendChild(li);
       });
       renderStatsTable(); 
@@ -365,9 +226,13 @@
     };
 
     function renderStatsTable() {
+      // 🔥 달력 일수를 완벽하게 계산 (check.html과 100% 동일)
+      const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
+      const firstDayIndex = new Date(viewYear, viewMonth - 1, 1).getDay();
+
       let validDays = [];
-      for (let day = 1; day <= DAYS_IN_MONTH; day++) {
-        const currentDayIndex = (day - 1 + FIRST_DAY_INDEX) % 7;
+      for (let day = 1; day <= daysInMonth; day++) {
+        const currentDayIndex = (day - 1 + firstDayIndex) % 7;
         if (currentDayIndex !== 0 && currentDayIndex !== 6 && !PUBLIC_HOLIDAYS.includes(day)) validDays.push(day);
       }
 
@@ -377,7 +242,8 @@
       statsTableHeadEl.innerHTML = theadHtml;
 
       let tbodyHtml = '';
-      let dailyTotals = Array(DAYS_IN_MONTH + 1).fill(0); 
+      let dailyTotals = {};
+      validDays.forEach(day => dailyTotals[day] = 0);
       let grandTotal = 0; 
 
       adminStaffData.forEach(staff => {
@@ -385,7 +251,10 @@
         tbodyHtml += `<tr><td class="sticky-col">${staff.name}</td>`;
         
         validDays.forEach(day => {
-          const isEating = staff.attendance ? staff.attendance[day] : false; 
+          // 🔥 여기서도 완벽하게 동일한 날짜 Key로 매칭 확인!
+          const dateKey = `${viewYear}-${viewMonth}-${day}`;
+          const isEating = staff.attendance ? staff.attendance[dateKey] : false; 
+          
           if(isEating) {
             personalSubTotal++; dailyTotals[day]++; 
             tbodyHtml += `<td class="cell-o">O</td>`;
@@ -410,12 +279,10 @@
       setTimeout(() => toastMessage.classList.remove('show'), 2000);
     }
 
-    // 엔터키로 직원 추가 지원
     document.getElementById('newName').addEventListener('keydown', function(e) {
       if (e.key === 'Enter') window.addStaff();
     });
 
-    // 앱 시작
     listenToDB();
   </script>
 </body>
