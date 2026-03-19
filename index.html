@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8" />
-  <title>동물보호사업소 점심 식사 관리자</title>
+  <title>동물보호사업소 식수 관리자</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   
   <style>
@@ -40,6 +40,12 @@
     .staff-info { display: flex; flex-direction: column; flex-grow: 1;}
     .staff-name { font-weight: bold; font-size: 1.05rem; color: #334155;}
     
+    /* 추가: 이름 수정 버튼 및 인풋 스타일 */
+    .btn-edit { background: #ede9fe; color: #7c3aed; border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s; margin-left: 4px; }
+    .btn-edit:hover { background: #c7d2fe; }
+    .edit-input { padding: 6px 8px; border: 1px solid #a5b4fc; border-radius: 6px; font-size: 1rem; margin-right: 6px; outline: none; min-width: 60px; }
+    .edit-input:focus { border-color: var(--primary); }
+
     .staff-actions { display: flex; gap: 4px; align-items: center; }
     .btn-move { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
     .btn-move:hover:not(:disabled) { background: #e2e8f0; color: var(--primary); border-color: #cbd5e1;}
@@ -127,7 +133,7 @@
   <script type="module">
     // 🔥 Firebase 모듈 불러오기
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     // ❗️ 여기에 기획자님의 Firebase 설정값을 덮어쓰세요!
     const firebaseConfig = {
@@ -153,6 +159,10 @@
     // 🔥 더미 데이터 없이 빈 배열로 시작!
     let adminStaffData = [];
 
+    // 이름 수정 모드 관리를 위한 State
+    let editingStaffId = null;
+    let editingStaffValue = "";
+
     const adminStaffListEl = document.getElementById('adminStaffList');
     const statsTableHeadEl = document.getElementById('statsTableHead');
     const statsTableBodyEl = document.getElementById('statsTableBody');
@@ -173,6 +183,10 @@
         // 순서 정렬
         newData.sort((a, b) => (a.order || 0) - (b.order || 0));
         adminStaffData = newData;
+
+        // 에디팅 중인 항목에 상관없이 DB 갱신 시 edit 모드 해제
+        editingStaffId = null;
+        editingStaffValue = "";
 
         renderAdminStaffList();
       });
@@ -228,6 +242,62 @@
       catch(e) { console.error("순서 변경 실패:", e); }
     };
 
+    // ==============================
+    // 이름 수정 함수
+    // ==============================
+    window.editStaffStart = function(id, currentName) {
+      editingStaffId = id;
+      editingStaffValue = currentName;
+      renderAdminStaffList();
+      // 수정 input에 포커스 및 선택
+      setTimeout(() => {
+        const inp = document.getElementById('edit-input-' + id);
+        if (inp) {
+          inp.focus();
+          inp.select();
+        }
+      }, 0);
+    };
+
+    window.editStaffChange = function(e) {
+      editingStaffValue = e.target.value;
+    };
+
+    window.editStaffKeydown = function(e, id, originalName) {
+      if (e.key === 'Enter') {
+        window.editStaffSave(id);
+      } else if (e.key === 'Escape') {
+        editingStaffId = null;
+        editingStaffValue = "";
+        renderAdminStaffList();
+      }
+    };
+
+    window.editStaffSave = async function(id) {
+      const newName = (editingStaffValue || "").trim();
+      if (!newName) {
+        showToast("이름을 입력해주세요.");
+        return;
+      }
+      try {
+        await updateDoc(doc(db, "staff", String(id)), { name: newName });
+        showToast("직원 이름이 변경되었습니다.");
+      } catch(e) { 
+        showToast("이름 수정 중 오류가 발생했습니다.");
+        console.error(e); 
+      } finally {
+        editingStaffId = null;
+        editingStaffValue = "";
+        renderAdminStaffList();
+      }
+    };
+
+    window.editStaffCancel = function() {
+      editingStaffId = null;
+      editingStaffValue = "";
+      renderAdminStaffList();
+    };
+
     // =========================================================================
     // UI 렌더링 함수들 
     // =========================================================================
@@ -246,15 +316,41 @@
         li.className = 'staff-item';
         const isFirst = index === 0;
         const isLast = index === adminStaffData.length - 1;
-
-        li.innerHTML = `
-          <div class="staff-info"><span class="staff-name">${staff.name}</span></div>
-          <div class="staff-actions">
-            <button class="btn-move" onclick="window.moveStaff(${index}, -1)" ${isFirst ? 'disabled' : ''} title="위로">▲</button>
-            <button class="btn-move" onclick="window.moveStaff(${index}, 1)" ${isLast ? 'disabled' : ''} title="아래로">▼</button>
-            <button class="btn-delete" onclick="window.deleteStaff('${staff.id}', '${staff.name}')">삭제</button>
-          </div>
-        `;
+        // 이름 수정모드인 경우 인풋 및 버튼 렌더
+        if (editingStaffId === staff.id) {
+          li.innerHTML = `
+            <div class="staff-info">
+              <input
+                type="text"
+                id="edit-input-${staff.id}"
+                class="edit-input"
+                value="${editingStaffValue.replace(/"/g,'&quot;')}"
+                oninput="window.editStaffChange(event)"
+                onkeydown="window.editStaffKeydown(event, '${staff.id}', '${staff.name.replace(/'/g,"\\'")}')"
+                maxlength="20"
+              />
+            </div>
+            <div class="staff-actions">
+              <button class="btn-edit" onclick="window.editStaffSave('${staff.id}')">저장</button>
+              <button class="btn-move" onclick="window.moveStaff(${index}, -1)" ${isFirst ? 'disabled' : ''} title="위로">▲</button>
+              <button class="btn-move" onclick="window.moveStaff(${index}, 1)" ${isLast ? 'disabled' : ''} title="아래로">▼</button>
+              <button class="btn-edit" onclick="window.editStaffCancel()">취소</button>
+              <button class="btn-delete" onclick="window.deleteStaff('${staff.id}', '${staff.name.replace(/'/g,"\\'")}')">삭제</button>
+            </div>
+          `;
+        } else {
+          li.innerHTML = `
+            <div class="staff-info">
+              <span class="staff-name">${staff.name}</span>
+            </div>
+            <div class="staff-actions">
+              <button class="btn-edit" onclick="window.editStaffStart('${staff.id}', '${staff.name.replace(/'/g,"\\'")}')">수정</button>
+              <button class="btn-move" onclick="window.moveStaff(${index}, -1)" ${isFirst ? 'disabled' : ''} title="위로">▲</button>
+              <button class="btn-move" onclick="window.moveStaff(${index}, 1)" ${isLast ? 'disabled' : ''} title="아래로">▼</button>
+              <button class="btn-delete" onclick="window.deleteStaff('${staff.id}', '${staff.name.replace(/'/g,"\\'")}')">삭제</button>
+            </div>
+          `;
+        }
         adminStaffListEl.appendChild(li);
       });
       renderStatsTable(); 
