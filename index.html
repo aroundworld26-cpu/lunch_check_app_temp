@@ -187,8 +187,6 @@
 
     let viewYear = 2026;
     let viewMonth = 3;
-    const DAYS_IN_MONTH = 31; 
-    const FIRST_DAY_INDEX = 0; 
     let PUBLIC_HOLIDAYS = [1, 2]; 
     let adminStaffData = [];
 
@@ -342,9 +340,13 @@
     }
 
     function renderStatsTable() {
+      // 선택된 연월을 바탕으로 해당 월의 마지막 날짜와 1일의 요일을 계산
+      const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
+      const firstDayIndex = new Date(viewYear, viewMonth - 1, 1).getDay();
+
       let validDays = [];
-      for (let day = 1; day <= DAYS_IN_MONTH; day++) {
-        const currentDayIndex = (day - 1 + FIRST_DAY_INDEX) % 7;
+      for (let day = 1; day <= daysInMonth; day++) {
+        const currentDayIndex = (day - 1 + firstDayIndex) % 7;
         const isWeekend = (currentDayIndex === 0 || currentDayIndex === 6);
         const isHoliday = PUBLIC_HOLIDAYS.includes(day);
         if (!isWeekend && !isHoliday) validDays.push(day);
@@ -359,7 +361,7 @@
       statsTableHeadEl.innerHTML = theadHtml;
 
       let tbodyHtml = '';
-      let dailyTotals = Array(DAYS_IN_MONTH + 1).fill(0); 
+      let dailyTotals = Array(daysInMonth + 1).fill(0); 
       let grandTotal = 0; 
 
       adminStaffData.forEach(staff => {
@@ -367,7 +369,6 @@
         tbodyHtml += `<tr>
           <td class="sticky-col">${staff.name}</td>`;
         validDays.forEach(day => {
-          // 연-월-일 키값 생성 (예: "2026-3-19")
           const dateKey = `${viewYear}-${viewMonth}-${day}`;
           const isEating = staff.attendance ? staff.attendance[dateKey] : false;
           
@@ -407,22 +408,23 @@
       document.head.appendChild(script);
     }
 
-    function downloadExcel() {
+function downloadExcel() {
       ensureSheetJS(() => {
+        const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
+        const firstDayIndex = new Date(viewYear, viewMonth - 1, 1).getDay();
+
         let validDays = [];
-        for (let day = 1; day <= DAYS_IN_MONTH; day++) {
-          const currentDayIndex = (day - 1 + FIRST_DAY_INDEX) % 7;
+        for (let day = 1; day <= daysInMonth; day++) {
+          const currentDayIndex = (day - 1 + firstDayIndex) % 7;
           const isWeekend = (currentDayIndex === 0 || currentDayIndex === 6);
           const isHoliday = PUBLIC_HOLIDAYS.includes(day);
           if (!isWeekend && !isHoliday) validDays.push(day);
         }
+        
         const sheetData = [];
         const header = ["이름"].concat(validDays.map(day=>`${day}일`), ["소계"]);
         sheetData.push(header);
 
-        // downloadExcel() 함수 안의 adminStaffData.forEach 부분을 찾아서 아래처럼 변경하세요.
-    
-        // (기존 코드 윗부분 생략) ...
         adminStaffData.forEach(staff => {
           let row = [staff.name];
           let personalSubTotal = 0;
@@ -436,7 +438,7 @@
           sheetData.push(row);
         });
 
-        let dailyTotals = Array(DAYS_IN_MONTH + 1).fill(0), grandTotal=0;
+        let dailyTotals = Array(daysInMonth + 1).fill(0), grandTotal=0;
         adminStaffData.forEach(staff => {
           validDays.forEach(day=>{
             const dateKey = `${viewYear}-${viewMonth}-${day}`;
@@ -444,7 +446,6 @@
             if(att) dailyTotals[day]++;
           });
         });
-        // ... (아랫부분 유지);
         validDays.forEach(day=>{ grandTotal += dailyTotals[day]; });
         let totalRow = ["일일 총계"].concat(validDays.map(day=>dailyTotals[day]), [grandTotal]);
         sheetData.push(totalRow);
