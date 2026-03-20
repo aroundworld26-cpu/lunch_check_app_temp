@@ -156,13 +156,13 @@
       <span style="font-size: 1.5rem;">🐾</span>
       <h1 style="color: var(--text-dark); margin: 0; flex:1 1 auto;">동물보호사업소 구내식당 관리</h1>
     </div>
-    <p style="color: #64748b; margin-top: 5px; font-size: 0.9rem;">직원용 일일/월간 점심 식사 체크</p>
+    <p style="color: #64748b; margin-top: 5px; font-size: 0.9rem;">직원용 월간 점심 식사 체크</p>
 
     <div class="grid-container">
       <div class="flex-col">
         <div class="card main-group">
           <div class="summary-box">
-            <div class="summary-label">오늘(19일) 총 식사 인원</div>
+            <div class="summary-label"><span id="todayLabel">오늘() 총 식사 인원</span></div>
             <div>
               <span class="summary-value" id="todayCount">0</span>
               <span class="total-staff">/ <span id="totalStaffCount">0</span>명</span>
@@ -204,14 +204,14 @@
         <div class="calendar-grid" id="calendarGrid"></div>
         
         <div id="monthlyTotalBox" class="monthly-total-box">
-          <span class="monthly-total-label">이번 달 내 총 식사 신청 수</span>
+          <span class="monthly-total-label">이번 달 나의 총 식사 신청 수</span>
           <div>
             <span class="monthly-total-value" id="monthlyTotalCount">0</span>
             <span style="font-weight: bold; color: #94a3b8; font-size: 1.1rem; margin-left: 2px;">일 (식)</span>
           </div>
         </div>
         
-        <div style="margin-top: 15px; text-align: center; color: #94a3b8; font-size: 0.85rem;">💡 휴무일(주말 및 공휴일)은 터치할 수 없습니다.</div>
+        <div style="margin-top: 15px; text-align: center; color: #94a3b8; font-size: 0.85rem;">💡 휴무일(주말 및 공휴일)은 쉽니다.</div>
         <button class="reset-btn" id="calendarResetBtn">뒤로 가기 (다른 직원 선택)</button>
       </div>
     </div>
@@ -236,9 +236,22 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    const TARGET_YEAR = 2026;
-    const TARGET_MONTH = 3;
-    const TODAY = 19; 
+    // 오늘 날짜 계산 - 한국 시간 기준
+    function getTodayInfo() {
+      const now = new Date();
+      // KST 시간 보정
+      const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+      const KST_DIFF = 9 * 60 * 60000;
+      const kstDate = new Date(utc + KST_DIFF);
+
+      const year = kstDate.getFullYear();
+      const month = kstDate.getMonth() + 1; // 1~12
+      const date = kstDate.getDate();
+      return { year, month, date };
+    }
+
+    // 오늘 info 전역 변수 세팅
+    const { year: TARGET_YEAR, month: TARGET_MONTH, date: TODAY } = getTodayInfo();
     let PUBLIC_HOLIDAYS = []; 
 
     const TODAY_KEY = `${TARGET_YEAR}-${TARGET_MONTH}-${TODAY}`;
@@ -263,6 +276,14 @@
     const mainGroupCards = document.getElementsByClassName('main-group');
     const monthlyTotalCountEl = document.getElementById('monthlyTotalCount');
     const monthlyTotalBox = document.getElementById('monthlyTotalBox');
+    const todayLabelEl = document.getElementById('todayLabel'); // 추가: 라벨 element
+
+    // < 오늘(19일) 총 식사 인원 > -> 동적으로 오늘 날짜 표시
+    function updateTodayLabel() {
+      todayLabelEl.textContent = `오늘(${TODAY}일) 총 식사 인원`;
+    }
+    // 최초 1회
+    updateTodayLabel();
 
     function listenToDB() {
       onSnapshot(collection(db, "staff"), (snapshot) => {
