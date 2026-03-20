@@ -219,6 +219,7 @@
     }
 
     // 신규 직원 추가
+    // 신규 직원 추가
     function addStaff() {
       const nameInput = document.getElementById('newName');
       const name = nameInput.value.trim();
@@ -228,10 +229,9 @@
         return;
       }
 
-      // order는 맨 앞에 추가: -timestamp로
       const newOrder = Date.now() * -1;
-      // 출석은 빈 배열로 초기화
-      const attendance = Array(DAYS_IN_MONTH + 1).fill(false);
+      // 출석을 빈 객체로 초기화 (연월일 저장을 위해)
+      const attendance = {}; 
 
       const staffRef = db.ref('adminStaffs').push();
       staffRef.set({
@@ -242,7 +242,7 @@
         nameInput.value = '';
         nameInput.focus();
         showToast(`${name} 직원이 추가되었습니다.`);
-        loadStaffList(); // 최신화
+        loadStaffList();
       });
     }
 
@@ -367,7 +367,10 @@
         tbodyHtml += `<tr>
           <td class="sticky-col">${staff.name}</td>`;
         validDays.forEach(day => {
-          const isEating = Array.isArray(staff.attendance) ? staff.attendance[day] : false;
+          // 연-월-일 키값 생성 (예: "2026-3-19")
+          const dateKey = `${viewYear}-${viewMonth}-${day}`;
+          const isEating = staff.attendance ? staff.attendance[dateKey] : false;
+          
           if(isEating) {
             personalSubTotal++;
             dailyTotals[day]++; 
@@ -417,11 +420,15 @@
         const header = ["이름"].concat(validDays.map(day=>`${day}일`), ["소계"]);
         sheetData.push(header);
 
+        // downloadExcel() 함수 안의 adminStaffData.forEach 부분을 찾아서 아래처럼 변경하세요.
+    
+        // (기존 코드 윗부분 생략) ...
         adminStaffData.forEach(staff => {
           let row = [staff.name];
           let personalSubTotal = 0;
           validDays.forEach(day => {
-            const att = Array.isArray(staff.attendance) ? staff.attendance[day] : false;
+            const dateKey = `${viewYear}-${viewMonth}-${day}`;
+            const att = staff.attendance ? staff.attendance[dateKey] : false;
             row.push(att ? "O" : "X");
             if(att) personalSubTotal++;
           });
@@ -432,10 +439,12 @@
         let dailyTotals = Array(DAYS_IN_MONTH + 1).fill(0), grandTotal=0;
         adminStaffData.forEach(staff => {
           validDays.forEach(day=>{
-            const att = Array.isArray(staff.attendance) ? staff.attendance[day] : false;
+            const dateKey = `${viewYear}-${viewMonth}-${day}`;
+            const att = staff.attendance ? staff.attendance[dateKey] : false;
             if(att) dailyTotals[day]++;
           });
         });
+        // ... (아랫부분 유지);
         validDays.forEach(day=>{ grandTotal += dailyTotals[day]; });
         let totalRow = ["일일 총계"].concat(validDays.map(day=>dailyTotals[day]), [grandTotal]);
         sheetData.push(totalRow);
