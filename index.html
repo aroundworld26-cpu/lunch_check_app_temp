@@ -4,54 +4,111 @@
   <meta charset="UTF-8" />
   <title>동물보호사업소 식수 관리자</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  
   <style>
     * { box-sizing: border-box; }
     body { background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #334155; margin: 0; padding: 20px; line-height: 1.5; }
     .max-w-7xl { max-width: 1400px; margin: 0 auto; } 
-    :root { --primary: #0d9488; --primary-light: #ccfbf1; --secondary: #f97316; --text-dark: #134e4a; --danger: #ef4444; }
+    
+    :root {
+      --primary: #0d9488;
+      --primary-light: #ccfbf1;
+      --secondary: #f97316;
+      --text-dark: #134e4a;
+      --danger: #ef4444;
+      --manual-holiday: #fed7aa;
+    }
+
     .navbar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 24px; border-radius: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 24px;}
     .nav-title { display: flex; align-items: center; gap: 10px; margin: 0; color: var(--text-dark); font-size: 1.4rem; font-weight: bold;}
     .nav-links a { text-decoration: none; color: white; background: var(--primary); padding: 8px 16px; border-radius: 8px; font-weight: bold; font-size: 0.95rem; transition: 0.2s;}
     .nav-links a:hover { background: #0f766e; }
+
     .grid-container { display: grid; grid-template-columns: 360px 1fr; gap: 24px; align-items: start; }
     @media (max-width: 1024px) { .grid-container { grid-template-columns: 1fr; } }
+    
     .card { background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column;}
     .card-title { font-size: 1.15rem; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 20px; border-bottom: 2px solid var(--primary-light); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
+    
     .form-group { display: flex; gap: 8px; margin-bottom: 16px; }
     .input-field { flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; outline: none; transition: 0.2s;}
     .input-field:focus { border-color: var(--primary); box-shadow: 0 0 0 2px rgba(13, 148, 136, 0.1); }
     .btn-add { background: var(--primary); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; white-space: nowrap;}
     .btn-add:hover { background: #0f766e; }
+
     .btn-excel { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s; white-space: nowrap;}
     .btn-excel:hover { background: #dcfce7; }
+
     .staff-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; max-height: 600px; border: 1px solid #e2e8f0; border-radius: 8px;}
     .staff-list::-webkit-scrollbar { width: 6px; }
     .staff-list::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
+    
     .staff-item { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: white; transition: background 0.2s;}
     .staff-item:hover { background: #f8fafc; }
+    .staff-item:last-child { border-bottom: none; }
     .staff-info { display: flex; flex-direction: column; flex-grow: 1;}
     .staff-name { font-weight: bold; font-size: 1.05rem; color: #334155;}
+    
     .staff-actions { display: flex; gap: 4px; align-items: center; }
     .btn-move { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;}
     .btn-move:hover:not(:disabled) { background: #e2e8f0; color: var(--primary); border-color: #cbd5e1;}
     .btn-move:disabled { opacity: 0.3; cursor: not-allowed; }
+    
     .btn-delete { background: #fee2e2; color: var(--danger); border: none; padding: 5px 10px; border-radius: 6px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s; margin-left: 4px;}
     .btn-delete:hover { background: #fecaca; }
+
     .period-selector { display: flex; align-items: center; gap: 20px; background: #f8fafc; padding: 8px 24px; border-radius: 30px; border: 2px solid #e2e8f0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);}
     .period-text { font-size: 1.3rem; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; min-width: 100px; text-align: center;}
     .period-btn { background: white; border: 2px solid #cbd5e1; border-radius: 50%; width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; cursor: pointer; color: #475569; font-weight: 900; font-size: 1.1rem; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.05);}
     .period-btn:hover { background: var(--primary); color: white; border-color: var(--primary); transform: scale(1.05);}
+
+    .manual-holiday-toggle {
+      display: inline-block;
+      background: var(--manual-holiday);
+      color: #b45309;
+      border-radius: 40%;
+      border: 1px solid #fdba74;
+      font-size: 0.82rem;
+      padding: 0 2px;
+      line-height: 1.1;
+      cursor: pointer;
+      margin-left: 3px;
+      margin-right: 3px;
+      box-shadow: 0px 1px 2px rgba(0,0,0,0.04);
+      user-select: none;
+      transition: background 0.15s;
+      vertical-align: middle;
+    }
+    .manual-holiday-toggle.active {
+      background: #fbbf24;
+      color: #fff;
+      border-color: #f59e42;
+    }
+
+    .manual-holiday-label {
+      font-size: 0.87rem;
+      margin-bottom: 6px;
+      color: #f97316;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+    }
+
     .table-container { overflow-x: auto; overflow-y: auto; max-height: 650px; border: 1px solid #e2e8f0; border-radius: 8px; white-space: nowrap; }
     .table-container::-webkit-scrollbar { width: 8px; height: 8px; }
     .table-container::-webkit-scrollbar-thumb { background-color: #94a3b8; border-radius: 4px; }
+    
     table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: center; font-size: 0.9rem; }
     th { background-color: #f8fafc; color: #475569; font-weight: 600; padding: 12px 8px; border-bottom: 2px solid #e2e8f0; border-right: 1px solid #f1f5f9;}
     td { padding: 10px 8px; border-bottom: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; color: #334155; }
+    
     th.sticky-col, td.sticky-col { position: sticky; left: 0; background-color: white; z-index: 1; border-right: 2px solid #cbd5e1; font-weight: bold;}
     th.sticky-col { background-color: #f8fafc; z-index: 3; }
+    
     .cell-o { color: var(--primary); font-weight: bold; }
     .cell-x { color: #cbd5e1; }
     .cell-subtotal { background: #f1f5f9; font-weight: bold; color: var(--text-dark); }
+    
     .toast { position: fixed; bottom: 20px; right: 20px; background: #334155; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; transform: translateY(150%); transition: 0.3s; z-index: 1000;}
     .toast.show { transform: translateY(0); }
   </style>
@@ -61,74 +118,102 @@
   <div id="toastMessage" class="toast">저장되었습니다.</div>
 
   <div class="max-w-7xl">
+    
     <div class="navbar">
       <h1 class="nav-title">🐾 동물보호사업소 식수 관리자 (Admin)</h1>
-      <div class="nav-links"><a href="check.html" target="_blank">👉 직원용 체크 화면 보기</a></div>
+      <div class="nav-links">
+        <a href="check.html" target="_blank">👉 직원용 체크 화면 보기</a>
+      </div>
     </div>
 
     <div class="grid-container">
+      
       <div class="card">
         <h2 class="card-title">
           직원 명부 관리
           <span style="font-size:0.85rem; background: var(--primary-light); color: var(--primary); padding: 4px 10px; border-radius: 20px;">총 <span id="staffCount">0</span>명</span>
         </h2>
+        
         <div style="margin-bottom: 20px; background: #f8fafc; padding: 16px; border-radius: 12px;">
           <label style="font-size: 0.85rem; font-weight: bold; color: #64748b; margin-bottom: 8px; display: block;">신규 직원 추가</label>
           <div class="form-group">
-            <input type="text" id="newName" class="input-field" placeholder="직원 이름 (예: 홍길동)">
-            <button class="btn-add" onclick="window.addStaff()">+ 추가</button>
+            <input type="text" id="newName" class="input-field" placeholder="직원 이름 (예: 홍길동)" onkeydown="if(event.keyCode==13) addStaff()">
+            <button class="btn-add" onclick="addStaff()">+ 추가</button>
           </div>
         </div>
-        <ul class="staff-list" id="adminStaffList"></ul>
+
+        <ul class="staff-list" id="adminStaffList">
+          </ul>
       </div>
 
       <div class="card" style="height: 100%;">
         <div class="card-title" style="margin-bottom: 16px;">
           <span>월간 식수 대장 (O/X표)</span>
+          
           <div style="display: flex; gap: 20px; align-items: center;">
-            <button class="btn-excel" onclick="alert('엑셀 파일로 다운로드합니다.')">📥 엑셀 다운로드</button>
+            <button class="btn-excel" onclick="downloadExcel()">📥 엑셀 다운로드</button>
+            
             <div class="period-selector">
-              <button class="period-btn" onclick="window.changeMonth(-1)">&lt;</button>
+              <button class="period-btn" onclick="changeMonth(-1)">&lt;</button>
               <span class="period-text" id="currentMonthText">2026년 3월</span>
-              <button class="period-btn" onclick="window.changeMonth(1)">&gt;</button>
+              <button class="period-btn" onclick="changeMonth(1)">&gt;</button>
             </div>
           </div>
         </div>
-        <div style="margin-bottom: 15px; color: #64748b; font-size: 0.85rem;">💡 주말 및 공휴일을 제외한 <strong>실제 평일</strong>만 표시됩니다.</div>
+
+        <div class="manual-holiday-label">
+          <span>수동 휴무일:</span>
+          <span id="manualHolidayToggles">
+            <!-- 날짜 토글 버튼이 여기에 동적으로 생성됩니다 -->
+          </span>
+          <span style="color:#999; font-size:0.82rem; margin-left:8px;">(날짜 클릭 시, 휴무일/해제)</span>
+        </div>
+
+        <div style="margin-bottom: 15px; color: #64748b; font-size: 0.85rem;">
+          💡 주말 및 공휴일을 제외한 <strong>실제 평일</strong>만 표시됩니다. 좌측 명부에서 <strong>▲▼ 버튼</strong>을 누르면 표의 순서도 변경됩니다.
+        </div>
+
         <div class="table-container">
           <table>
-            <thead id="statsTableHead" style="position: sticky; top: 0; z-index: 2;"></thead>
-            <tbody id="statsTableBody"></tbody>
+            <thead id="statsTableHead" style="position: sticky; top: 0; z-index: 2;">
+              </thead>
+            <tbody id="statsTableBody">
+              </tbody>
           </table>
         </div>
+
       </div>
+
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    // ❗️ 여기에 기획자님의 Firebase 설정값을 덮어쓰세요!
-    const firebaseConfig = {
-        apiKey: "AIzaSyB3G_qPJCu-J754PLBB0zETPsWIB8wi4H0",
-        authDomain: "lunch-check-app-temp.firebaseapp.com",
-        projectId: "lunch-check-app-temp",
-        storageBucket: "lunch-check-app-temp.firebasestorage.app",
-        messagingSenderId: "140909618699",
-        appId: "1:140909618699:web:15054d9f11d45bfc56890e",
-        measurementId: "G-F3VSX6TPE4",
-        databaseURL: "https://lunch-check-app-temp-default-rtdb.asia-southeast1.firebasedatabase.app"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
+  <script>
     let viewYear = 2026;
     let viewMonth = 3;
-    let PUBLIC_HOLIDAYS = [1, 2]; // 기본 휴일 설정
+    const DAYS_IN_MONTH = 31; 
+    const FIRST_DAY_INDEX = 0; 
+    let PUBLIC_HOLIDAYS = [1, 2]; 
 
+    // 🔥 직책 데이터 제거됨
+    const familyNames = ["김", "이", "박", "최", "정", "강", "조", "윤", "장", "임", "한", "오", "서", "신", "권"];
+    const givenNames = ["철수", "영희", "민준", "지우", "다은", "현우", "지훈", "서연", "하늘", "우진", "수아", "도현", "윤서", "건우", "예은"];
+    
     let adminStaffData = [];
+    for(let i = 1; i <= 40; i++) {
+      let randomName = familyNames[Math.floor(Math.random() * familyNames.length)] + givenNames[Math.floor(Math.random() * givenNames.length)];
+      if(i === 1) randomName = "김철수";
+      if(i === 2) randomName = "이영희";
+      
+      let attendance = Array(DAYS_IN_MONTH + 1).fill(false);
+      for(let d = 1; d <= DAYS_IN_MONTH; d++) {
+         if(Math.random() > 0.25) attendance[d] = true; 
+      }
+
+      adminStaffData.push({ id: i, name: randomName, attendance: attendance });
+    }
+
+    // 처음 앱을 켤 때만 가나다순으로 초기 정렬
+    adminStaffData.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
 
     const adminStaffListEl = document.getElementById('adminStaffList');
     const statsTableHeadEl = document.getElementById('statsTableHead');
@@ -136,127 +221,165 @@
     const staffCountEl = document.getElementById('staffCount');
     const currentMonthTextEl = document.getElementById('currentMonthText');
     const toastMessage = document.getElementById('toastMessage');
+    const manualHolidayTogglesEl = document.getElementById('manualHolidayToggles');
 
-    function listenToDB() {
-      onSnapshot(collection(db, "staff"), (snapshot) => {
-        const newData = [];
-        snapshot.forEach((doc) => { newData.push({ id: doc.id, ...doc.data() }); });
-        newData.sort((a, b) => (a.order || 0) - (b.order || 0));
-        adminStaffData = newData;
-        renderAdminStaffList();
-      });
+    let MANUAL_HOLIDAYS = []; // 수동 지정 휴무일 (날짜만 배열로 표시)
+
+    //---------------------------------------------
+    // 수동 휴무일 토글 UI 생성
+    //---------------------------------------------
+    function renderManualHolidayToggles() {
+      manualHolidayTogglesEl.innerHTML = '';
+      for(let day=1; day<=DAYS_IN_MONTH; day++) {
+        const btn = document.createElement('button');
+        btn.type = "button";
+        btn.className = "manual-holiday-toggle" + (PUBLIC_HOLIDAYS.includes(day) ? " active" : "");
+        btn.innerText = String(day);
+        btn.title = "클릭 시 휴무일 변경";
+        btn.onclick = () => toggleManualHoliday(day);
+        manualHolidayTogglesEl.appendChild(btn);
+      }
     }
 
-    window.addStaff = async function() {
-      const nameInput = document.getElementById('newName');
-      const name = nameInput.value.trim();
-      if (!name) { showToast("이름을 입력해주세요."); return; }
-
-      const newId = "staff_" + Date.now();
-      const newOrder = adminStaffData.length > 0 ? (adminStaffData[0].order || 0) - 1 : 0; 
-
-      const newStaff = {
-        name: name,
-        order: newOrder,
-        attendance: {} // 🔥 새 직원은 깨끗한 객체로 생성!
-      };
-      
-      try {
-        await setDoc(doc(db, "staff", newId), newStaff);
-        nameInput.value = ''; nameInput.focus();
-        showToast(`${name} 직원이 추가되었습니다.`);
-      } catch(e) { console.error(e); }
-    };
-
-    window.deleteStaff = async function(id, name) {
-      if(confirm(`${name} 직원을 삭제하시겠습니까?`)) {
-        try {
-          await deleteDoc(doc(db, "staff", String(id)));
-          showToast(`${name} 직원이 삭제되었습니다.`);
-        } catch(e) { console.error(e); }
+    function toggleManualHoliday(day) {
+      // 토글 방식
+      const idx = PUBLIC_HOLIDAYS.indexOf(day);
+      if(idx === -1) {
+        PUBLIC_HOLIDAYS.push(day);
+      } else {
+        PUBLIC_HOLIDAYS.splice(idx, 1);
       }
-    };
+      renderManualHolidayToggles();
+      renderStatsTable();
+    }
 
-    window.moveStaff = async function(currentIndex, direction) {
-      const targetIndex = currentIndex + direction;
-      if (targetIndex < 0 || targetIndex >= adminStaffData.length) return;
-      const staffA = adminStaffData[currentIndex];
-      const staffB = adminStaffData[targetIndex];
-      const batch = writeBatch(db);
-      batch.update(doc(db, "staff", String(staffA.id)), { order: staffB.order || 0 });
-      batch.update(doc(db, "staff", String(staffB.id)), { order: staffA.order || 0 });
-      try { await batch.commit(); } catch(e) { console.error("순서 변경 실패:", e); }
-    };
-
+    // -----------------------------------------
+    // 1. 직원 명부 관리 (CRUD 및 순서 변경)
+    // -----------------------------------------
     function renderAdminStaffList() {
       adminStaffListEl.innerHTML = '';
       staffCountEl.textContent = adminStaffData.length;
 
-      if(adminStaffData.length === 0) {
-        adminStaffListEl.innerHTML = '<li style="padding: 20px; text-align:center; color: #94a3b8;">신규 직원을 추가해주세요.</li>';
-        renderStatsTable();
-        return;
-      }
-
       adminStaffData.forEach((staff, index) => {
         const li = document.createElement('li');
         li.className = 'staff-item';
+        
         const isFirst = index === 0;
         const isLast = index === adminStaffData.length - 1;
 
+        // 🔥 직책(role) 렌더링 제거 완료
         li.innerHTML = `
-          <div class="staff-info"><span class="staff-name">${staff.name}</span></div>
+          <div class="staff-info">
+            <span class="staff-name">${staff.name}</span>
+          </div>
           <div class="staff-actions">
-            <button class="btn-move" onclick="window.moveStaff(${index}, -1)" ${isFirst ? 'disabled' : ''} title="위로">▲</button>
-            <button class="btn-move" onclick="window.moveStaff(${index}, 1)" ${isLast ? 'disabled' : ''} title="아래로">▼</button>
-            <button class="btn-delete" onclick="window.deleteStaff('${staff.id}', '${staff.name}')">삭제</button>
+            <button class="btn-move" onclick="moveStaff(${index}, -1)" ${isFirst ? 'disabled' : ''} title="위로">▲</button>
+            <button class="btn-move" onclick="moveStaff(${index}, 1)" ${isLast ? 'disabled' : ''} title="아래로">▼</button>
+            <button class="btn-delete" onclick="deleteStaff(${staff.id}, '${staff.name}')">삭제</button>
           </div>
         `;
         adminStaffListEl.appendChild(li);
       });
+      
       renderStatsTable(); 
     }
 
-    window.changeMonth = function(delta) {
+    function moveStaff(currentIndex, direction) {
+      const targetIndex = currentIndex + direction;
+      if (targetIndex < 0 || targetIndex >= adminStaffData.length) return;
+      const temp = adminStaffData[currentIndex];
+      adminStaffData[currentIndex] = adminStaffData[targetIndex];
+      adminStaffData[targetIndex] = temp;
+      renderAdminStaffList();
+    }
+
+    function addStaff() {
+      const nameInput = document.getElementById('newName');
+      const name = nameInput.value.trim();
+
+      if (!name) {
+        showToast("이름을 입력해주세요.");
+        return;
+      }
+
+      const newStaff = {
+        id: Date.now(),
+        name: name,
+        attendance: Array(DAYS_IN_MONTH + 1).fill(false) 
+      };
+
+      adminStaffData.unshift(newStaff); 
+      
+      nameInput.value = '';
+      nameInput.focus(); // 입력 후 포커스 유지
+      
+      renderAdminStaffList();
+      showToast(`${name} 직원이 추가되었습니다.`);
+    }
+
+    function deleteStaff(id, name) {
+      if(confirm(`${name} 직원의 데이터를 정말 삭제하시겠습니까?`)) {
+        adminStaffData = adminStaffData.filter(staff => staff.id !== id);
+        renderAdminStaffList();
+        showToast(`${name} 직원이 삭제되었습니다.`);
+      }
+    }
+
+    // -----------------------------------------
+    // 2. 월간 통계 (출석부형) 그리기 함수
+    // -----------------------------------------
+    function changeMonth(delta) {
       viewMonth += delta;
       if(viewMonth > 12) { viewMonth = 1; viewYear++; }
       if(viewMonth < 1) { viewMonth = 12; viewYear--; }
       currentMonthTextEl.textContent = `${viewYear}년 ${viewMonth}월`;
+
+      // 월 전환 시, 수동휴무일/공휴일 샘플 초깃값(여기선 1,2일)로 초기화
+      PUBLIC_HOLIDAYS = [1, 2];
+      
+      adminStaffData.forEach(staff => {
+        staff.attendance = Array(DAYS_IN_MONTH + 1).fill(false);
+        for(let d=1; d<=DAYS_IN_MONTH; d++) {
+           if(Math.random() > 0.25) staff.attendance[d] = true;
+        }
+      });
+      renderManualHolidayToggles();
       renderStatsTable();
-    };
+    }
 
     function renderStatsTable() {
-      // 🔥 달력 일수를 완벽하게 계산 (check.html과 100% 동일)
-      const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
-      const firstDayIndex = new Date(viewYear, viewMonth - 1, 1).getDay();
-
       let validDays = [];
-      for (let day = 1; day <= daysInMonth; day++) {
-        const currentDayIndex = (day - 1 + firstDayIndex) % 7;
-        if (currentDayIndex !== 0 && currentDayIndex !== 6 && !PUBLIC_HOLIDAYS.includes(day)) validDays.push(day);
+      for (let day = 1; day <= DAYS_IN_MONTH; day++) {
+        const currentDayIndex = (day - 1 + FIRST_DAY_INDEX) % 7;
+        const isWeekend = (currentDayIndex === 0 || currentDayIndex === 6);
+        const isHoliday = PUBLIC_HOLIDAYS.includes(day);
+        if (!isWeekend && !isHoliday) validDays.push(day);
       }
 
-      let theadHtml = `<tr><th class="sticky-col" style="min-width: 100px;">이름</th>`;
-      validDays.forEach(day => { theadHtml += `<th style="min-width: 45px;">${day}일</th>`; });
+      // 표 헤더 구성  
+      let theadHtml = `<tr>
+        <th class="sticky-col" style="min-width: 100px;">이름</th>`;
+      
+      validDays.forEach(day => {
+        theadHtml += `<th style="min-width: 45px;">${day}일</th>`;
+      });
       theadHtml += `<th style="min-width: 60px; color: var(--primary);">소계</th></tr>`;
       statsTableHeadEl.innerHTML = theadHtml;
 
       let tbodyHtml = '';
-      let dailyTotals = {};
-      validDays.forEach(day => dailyTotals[day] = 0);
+      let dailyTotals = Array(DAYS_IN_MONTH + 1).fill(0); 
       let grandTotal = 0; 
 
       adminStaffData.forEach(staff => {
         let personalSubTotal = 0;
-        tbodyHtml += `<tr><td class="sticky-col">${staff.name}</td>`;
+        tbodyHtml += `<tr>
+          <td class="sticky-col">${staff.name}</td>`;
         
         validDays.forEach(day => {
-          // 🔥 여기서도 완벽하게 동일한 날짜 Key로 매칭 확인!
-          const dateKey = `${viewYear}-${viewMonth}-${day}`;
-          const isEating = staff.attendance ? staff.attendance[dateKey] : false; 
-          
+          const isEating = staff.attendance[day];
           if(isEating) {
-            personalSubTotal++; dailyTotals[day]++; 
+            personalSubTotal++;
+            dailyTotals[day]++; 
             tbodyHtml += `<td class="cell-o">O</td>`;
           } else {
             tbodyHtml += `<td class="cell-x">X</td>`;
@@ -267,23 +390,96 @@
         tbodyHtml += `<td class="cell-subtotal">${personalSubTotal}</td></tr>`;
       });
 
-      let tfootHtml = `<tr style="background: var(--primary-light);"><td class="sticky-col" style="background: var(--primary-light); color: var(--text-dark);">일일 총계</td>`;
-      validDays.forEach(day => { tfootHtml += `<td style="font-weight: bold; color: var(--primary);">${dailyTotals[day]}</td>`; });
+      let tfootHtml = `<tr style="background: var(--primary-light);">
+        <td class="sticky-col" style="background: var(--primary-light); color: var(--text-dark);">일일 총계</td>`;
+      
+      validDays.forEach(day => {
+        tfootHtml += `<td style="font-weight: bold; color: var(--primary);">${dailyTotals[day]}</td>`;
+      });
+      
       tfootHtml += `<td style="font-weight: 900; font-size: 1.1rem; color: var(--danger);">${grandTotal}</td></tr>`;
 
       statsTableBodyEl.innerHTML = tbodyHtml + tfootHtml;
     }
 
+    // -----------------------------------------
+    // 3. 엑셀 다운로드 (xlsx 형식)
+    // -----------------------------------------
+    // 라이브러리 추가(없으면 자동 CDN 삽입)
+    function ensureSheetJS(callback) {
+      if (window.XLSX) {
+        callback();
+        return;
+      }
+      let script = document.createElement("script");
+      script.src = "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+      script.onload = callback;
+      document.head.appendChild(script);
+    }
+
+    function downloadExcel() {
+      ensureSheetJS(()=>{
+        // 엑셀 구조 데이터 생성
+        let validDays = [];
+        for (let day = 1; day <= DAYS_IN_MONTH; day++) {
+          const currentDayIndex = (day - 1 + FIRST_DAY_INDEX) % 7;
+          const isWeekend = (currentDayIndex === 0 || currentDayIndex === 6);
+          const isHoliday = PUBLIC_HOLIDAYS.includes(day);
+          if (!isWeekend && !isHoliday) validDays.push(day);
+        }
+
+        // 시트 데이터 구축
+        const sheetData = [];
+        const header = ["이름"].concat(validDays.map(day=>`${day}일`), ["소계"]);
+        sheetData.push(header);
+
+        adminStaffData.forEach(staff => {
+          let row = [staff.name];
+          let personalSubTotal = 0;
+          validDays.forEach(day => {
+            row.push(staff.attendance[day] ? "O" : "X");
+            if(staff.attendance[day]) personalSubTotal++;
+          });
+          row.push(personalSubTotal);
+          sheetData.push(row);
+        });
+
+        // 일일 총계
+        let dailyTotals = Array(DAYS_IN_MONTH + 1).fill(0), grandTotal=0;
+        adminStaffData.forEach(staff => {
+          validDays.forEach(day=>{
+            if(staff.attendance[day]) dailyTotals[day]++;
+          })
+        });
+        validDays.forEach(day=>{ grandTotal += dailyTotals[day]; });
+        let totalRow = ["일일 총계"].concat(validDays.map(day=>dailyTotals[day]), [grandTotal]);
+        sheetData.push(totalRow);
+
+        // 워크북 생성
+        let ws = XLSX.utils.aoa_to_sheet(sheetData);
+        let wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "월간 식수대장");
+
+        // 파일 경로와 다운로드
+        let fileName = `식수대장_${viewYear}년${String(viewMonth).padStart(2,'0')}월.xlsx`;
+        XLSX.writeFile(wb, fileName);
+
+        // 안내 문구
+        showToast(`다운로드 후 C:\\Temp 폴더에 파일을 넣어주세요.`);
+      });
+    }
+
+    // -----------------------------------------
     function showToast(msg) {
-      toastMessage.textContent = msg; toastMessage.classList.add('show');
+      toastMessage.textContent = msg;
+      toastMessage.classList.add('show');
       setTimeout(() => toastMessage.classList.remove('show'), 2000);
     }
 
-    document.getElementById('newName').addEventListener('keydown', function(e) {
-      if (e.key === 'Enter') window.addStaff();
-    });
+    // 최초 렌더링
+    renderAdminStaffList();
+    renderManualHolidayToggles();
 
-    listenToDB();
   </script>
 </body>
 </html>
