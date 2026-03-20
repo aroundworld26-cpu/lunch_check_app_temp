@@ -219,9 +219,8 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-    // ❗️ 여기에 기획자님의 Firebase 설정값을 덮어쓰세요!
     const firebaseConfig = {
         apiKey: "AIzaSyB3G_qPJCu-J754PLBB0zETPsWIB8wi4H0",
         authDomain: "lunch-check-app-temp.firebaseapp.com",
@@ -234,27 +233,23 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const db = getDatabase(app);
 
-    // 오늘 날짜 계산 - 한국 시간 기준
     function getTodayInfo() {
       const now = new Date();
-      // KST 시간 보정
       const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
       const KST_DIFF = 9 * 60 * 60000;
       const kstDate = new Date(utc + KST_DIFF);
 
       const year = kstDate.getFullYear();
-      const month = kstDate.getMonth() + 1; // 1~12
+      const month = kstDate.getMonth() + 1;
       const date = kstDate.getDate();
       return { year, month, date };
     }
 
-    // 오늘 info 전역 변수 세팅
     const { year: TARGET_YEAR, month: TARGET_MONTH, date: TODAY } = getTodayInfo();
+    const TODAY_KEY = `${TARGET_YEAR}-${TARGET_MONTH}-${TODAY}`; // 연-월-일 키
     let PUBLIC_HOLIDAYS = []; 
-
-    const TODAY_KEY = `${TARGET_YEAR}-${TARGET_MONTH}-${TODAY}`;
 
     const CHOSUNG_LIST = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
     
@@ -276,19 +271,20 @@
     const mainGroupCards = document.getElementsByClassName('main-group');
     const monthlyTotalCountEl = document.getElementById('monthlyTotalCount');
     const monthlyTotalBox = document.getElementById('monthlyTotalBox');
-    const todayLabelEl = document.getElementById('todayLabel'); // 추가: 라벨 element
+    const todayLabelEl = document.getElementById('todayLabel'); 
 
-    // < 오늘(19일) 총 식사 인원 > -> 동적으로 오늘 날짜 표시
     function updateTodayLabel() {
       todayLabelEl.textContent = `오늘(${TODAY}일) 총 식사 인원`;
     }
-    // 최초 1회
     updateTodayLabel();
 
     function listenToDB() {
-      onSnapshot(collection(db, "staff"), (snapshot) => {
+      const staffRef = ref(db, 'adminStaffs');
+      onValue(staffRef, (snapshot) => {
         const newData = [];
-        snapshot.forEach((doc) => { newData.push({ id: doc.id, ...doc.data() }); });
+        snapshot.forEach((childSnapshot) => {
+          newData.push({ id: childSnapshot.key, ...childSnapshot.val() });
+        });
         newData.sort((a, b) => (a.order || 0) - (b.order || 0));
         staffData = newData;
 
@@ -303,15 +299,17 @@
 
     window.toggleAttendance = async function(staffId, day) {
       const staff = staffData.find(s => s.id === staffId);
-      const dateKey = `${TARGET_YEAR}-${TARGET_MONTH}-${day}`;
+      const dateKey = `${TARGET_YEAR}-${TARGET_MONTH}-${day}`; // 연-월-일 키 생성
       
-      const newAttendance = { ...(staff.attendance || {}) }; 
-      newAttendance[dateKey] = !newAttendance[dateKey]; 
+      const newAttendance = { ...(staff.attendance || {}) };
+      newAttendance[dateKey] = !newAttendance[dateKey]; // 해당 날짜 토글
 
       try {
-        await updateDoc(doc(db, "staff", String(staffId)), { attendance: newAttendance });
+        await update(ref(db, `adminStaffs/${staffId}`), { attendance: newAttendance });
         showToast(`${staff.name}님의 ${TARGET_MONTH}월 ${day}일 식사가 ${newAttendance[dateKey] ? '등록' : '취소'}되었습니다.`);
-      } catch (error) { showToast("오류가 발생했습니다."); }
+      } catch (error) { 
+        showToast("오류가 발생했습니다."); 
+      }
     };
 
     async function fetchPublicHolidays(year, month) {
@@ -319,7 +317,7 @@
       const monthStr = String(month).padStart(2, '0');
       const url = `https://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo?solYear=${year}&solMonth=${monthStr}&ServiceKey=${API_KEY}&_type=json`;
       try {
-        if (API_KEY.includes("발급받은_API_키를")) return [1]; 
+        if (API_KEY.includes("발급받은_API_키를")) return [1, 2];
         const response = await fetch(url);
         const json = await response.json();
         const items = json.response?.body?.items?.item;
@@ -328,7 +326,7 @@
         if (Array.isArray(items)) { holidays = items.filter(item => item.isHoliday === "Y").map(item => parseInt(String(item.locdate).slice(-2), 10)); } 
         else if (items.isHoliday === "Y") { holidays.push(parseInt(String(items.locdate).slice(-2), 10)); }
         return holidays;
-      } catch (error) { return [1]; }
+      } catch (error) { return [1, 2]; }
     }
 
     function getInitialConsonant(name) {
@@ -365,7 +363,6 @@
     }
 
     function renderTodayStaffListArea() {
-      // 위치가 변경되어도 이 함수는 동일하게 동작, 단순 위치만 위로 이동함
       if (selectedStaffId !== null) { todayStaffContainer.style.display = 'none'; return; }
       const eatingToday = staffData.filter(staff => staff.attendance && staff.attendance[TODAY_KEY]);
       if (eatingToday.length === 0) {
@@ -379,12 +376,10 @@
       todayStaffContainer.style.display = 'block';
     }
 
-    // 직원명 4명씩 한 줄: grid를 위해 기존 코드를 수정
     function renderStaffList() {
       staffListEl.innerHTML = '';
 
       if(selectedStaffId !== null) {
-        // 직원이 선택되어 있을 때: 자신만 보여주기
         const staff = staffData.find(staff => staff.id === selectedStaffId);
         if (staff) {
           const li = document.createElement('li');
@@ -396,7 +391,6 @@
         } else {
           staffListEl.style.display = 'none';
         }
-        // 빈 메시지는 안보이게
         emptyMessage.style.display = 'none';
         return;
       }
@@ -488,7 +482,7 @@
 
     function goToInitState() {
       selectedStaffId = null; selectedChosung = '전체'; showMainState(true);           
-      renderConsonantButtons(); updateTodayCount(); renderStaffList(); renderCalendar(); renderTodayStaffListArea();    
+      renderConsonantButtons(); updateTodayCount(); renderStaffList(); renderCalendar(); renderTodayStaffListArea();   
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
