@@ -12,7 +12,6 @@
     :root { --primary: #0d9488; --primary-light: #ccfbf1; --secondary: #f97316; --text-dark: #134e4a; }
     .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; margin-top: 20px; }
     .flex-col { display: flex; flex-direction: column; gap: 24px; height: auto; }
-    /* 카드 배경 및 크기 110% 확대 */
     .card {
       background: #ffffff;
       border-radius: 16px;
@@ -22,6 +21,9 @@
       flex-direction: column;
       transform: scale(1.1);
       transform-origin: top left;
+    }
+    .calendar-area {
+      /* 기존 크기. 모바일에서 @media로 오버라이드 */
     }
     .card-title { font-size: 1.15rem; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 16px; border-bottom: 2px solid var(--primary-light); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
     .summary-box { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; background: var(--primary-light); padding: 16px 20px; border-radius: 12px; border: 1px solid #99f6e4;}
@@ -75,7 +77,6 @@
     .status-badge.eating { background: var(--secondary); color: white; }
     .calendar-header { display: flex; justify-content: space-between; align-items: flex-start; flex-direction: column; gap: 6px; margin-bottom: 12px;}
     .calendar-title { font-size: 1.05rem; font-weight: bold; color: var(--text-dark); }
-    /* 달력 셀 크기 105%로 확대 */
     .calendar-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
@@ -124,13 +125,19 @@
       body { padding: 4vw 4vw 10vw 4vw; height: auto; }
       .grid-container { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; max-width: 100vw; }
       .card { padding: 5vw 4vw; border-radius: 12px; min-width: 0; overflow: visible; box-sizing: border-box; transform: scale(1); }
+      .calendar-area { 
+        transform: scale(1.2) !important;
+        transform-origin: top left;
+        z-index: 1;
+      }
       h1 { font-size: 1.2rem !important; }
       .calendar-grid { gap: 2.1px; }
       .day-cell { width: 94.5%; font-size: 0.872rem; min-width: 23.1px; min-height: 23.1px; } /* 모바일에서 비율 동일, 더 크게 */
       .day-number { font-size: 0.798rem; }
       .day-status { width: 18.69px; height: 18.69px; font-size: 0.62rem; }
+      /* 모바일에서도 4개씩! */
       .staff-list {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(4, 1fr) !important;
       }
     }
   </style>
@@ -231,7 +238,6 @@
     const TODAY = 19; 
     let PUBLIC_HOLIDAYS = []; 
 
-    // 🔥 완벽하게 일치하는 날짜 키(Key) 생성
     const TODAY_KEY = `${TARGET_YEAR}-${TARGET_MONTH}-${TODAY}`;
 
     const CHOSUNG_LIST = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
@@ -271,7 +277,6 @@
       });
     }
 
-    // 🔥 O/X 체크를 완벽한 날짜 Key로 저장
     window.toggleAttendance = async function(staffId, day) {
       const staff = staffData.find(s => s.id === staffId);
       const dateKey = `${TARGET_YEAR}-${TARGET_MONTH}-${day}`;
@@ -352,6 +357,25 @@
     // 직원명 4명씩 한 줄: grid를 위해 기존 코드를 수정
     function renderStaffList() {
       staffListEl.innerHTML = '';
+
+      if(selectedStaffId !== null) {
+        // 직원이 선택되어 있을 때: 자신만 보여주기
+        const staff = staffData.find(staff => staff.id === selectedStaffId);
+        if (staff) {
+          const li = document.createElement('li');
+          const isTodayEating = staff.attendance && staff.attendance[TODAY_KEY];
+          li.className = `staff-item active`;
+          li.innerHTML = `<div><div class="staff-name">${staff.name}</div></div><div class="status-badge ${isTodayEating ? 'eating' : ''}">오늘 ${isTodayEating ? 'O' : 'X'}</div>`;
+          staffListEl.style.display = 'grid';
+          staffListEl.appendChild(li);
+        } else {
+          staffListEl.style.display = 'none';
+        }
+        // 빈 메시지는 안보이게
+        emptyMessage.style.display = 'none';
+        return;
+      }
+
       const filteredStaff = staffData.filter(staff => {
         if (selectedChosung === '전체') return true;
         return getInitialConsonant(staff.name) === selectedChosung;
@@ -395,7 +419,6 @@
       calendarGridEl.innerHTML = '';
       let monthlyCheckedCount = 0;
 
-      // 🔥 달력 일수를 완벽하게 계산
       const daysInMonth = new Date(TARGET_YEAR, TARGET_MONTH, 0).getDate();
       const firstDayIndex = new Date(TARGET_YEAR, TARGET_MONTH - 1, 1).getDay();
 
