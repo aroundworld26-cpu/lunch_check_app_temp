@@ -70,11 +70,11 @@
     .day-cell.today { border: 2.1px solid var(--primary); }
     .day-cell.today::before { content: '오늘'; position: absolute; top: -6.3px; font-size: 0.61425rem; background: var(--primary); color: white; padding: 2.1px 5.25px; border-radius: 10.5px; font-weight: bold;}
     
-    /* 🔥 2주 전체 식수 인원용 스타일 (배경 투명, 글자 검정색) */
-    .summary-status { width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; font-size: 0.85rem; font-weight: bold; margin-top: 2px; letter-spacing: -0.5px; }
-    .summary-status.has-count { background: transparent; color: #000000; font-size: 1rem; font-weight: 900; box-shadow: none; }
-    .summary-status.no-count { background: transparent; color: #94a3b8; }
-    .summary-status.closed { background: transparent; color: #94a3b8; font-size: 0.8rem; }
+    /* 🔥 2주 전체 식수 인원용 스타일 (배경 투명, 글자 검정색, 글자 크기 더 축소) */
+    .summary-status { width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; font-size: 0.75rem; font-weight: bold; margin-top: 2px; letter-spacing: -0.5px; }
+    .summary-status.has-count { background: transparent; color: #000000; font-size: 0.8rem; font-weight: 900; box-shadow: none; }
+    .summary-status.no-count { background: transparent; color: #94a3b8; font-size: 0.8rem; }
+    .summary-status.closed { background: transparent; color: #94a3b8; font-size: 0.75rem; }
 
     .toast { position: fixed; bottom: 5vw; left: 4vw; right: 4vw; text-align: center; background: #334155; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; transform: translateY(150%); transition: 0.3s; z-index: 1000; max-width: 92vw;}
     .toast.show { transform: translateY(0); }
@@ -103,7 +103,10 @@
       .day-cell { width: 100%; font-size: 0.95rem; min-width: auto; min-height: auto; border-radius: 6px; } 
       .day-number { font-size: 0.85rem; }
       .day-status { width: 22px; height: 22px; font-size: 0.7rem; }
-      .summary-status { width: 26px; height: 26px; font-size: 0.85rem; }
+      
+      /* 🔥 모바일용 식수 인원 글자 크기 더 축소 */
+      .summary-status { width: 26px; height: 26px; font-size: 0.8rem; }
+      .summary-status.has-count { font-size: 0.8rem; }
     }
   </style>
 </head>
@@ -241,7 +244,7 @@
     const monthlyTotalBox = document.getElementById('monthlyTotalBox');
     const todayLabelEl = document.getElementById('todayLabel');
     const calendarMonthText = document.getElementById('calendarMonthText');
-    const expectedStaffListContainer = document.getElementById('expectedStaffListContainer'); // 🔥 명단 컨테이너
+    const expectedStaffListContainer = document.getElementById('expectedStaffListContainer');
 
     function updateTodayLabel() {
       todayLabelEl.textContent = `오늘(${TODAY}일) 총 식사 인원`;
@@ -288,7 +291,6 @@
       } catch (error) { showToast("오류가 발생했습니다."); }
     };
 
-    // 🔥 특정 날짜 클릭 시 명단 표시 함수 추가
     window.showExpectedStaffList = function(dateKey, month, day) {
       const eatingStaff = staffData.filter(staff => staff.attendance && staff.attendance[dateKey]);
       
@@ -417,7 +419,7 @@
     }
 
     function renderCalendar() {
-      // 🔥 1. 직원을 선택하기 전: 금주/차주 예상 식수 인원 (2주치 달력) 표시
+      // 1. 직원을 선택하기 전: 금주/차주 예상 식수 인원 (2주치 달력) 표시
       if (!selectedStaffId) {
         calendarCard.classList.remove('calendar-area-hidden'); 
         calendarTitleEl.innerHTML = `<span style="color: var(--primary);">금주/차주</span> 예상 식수 인원`;
@@ -425,7 +427,7 @@
         
         monthlyTotalCountEl.textContent = 0; 
         monthlyTotalBox.style.display = 'none'; 
-        expectedStaffListContainer.style.display = 'none'; // 달력 렌더링 시 명단 초기화
+        expectedStaffListContainer.style.display = 'none'; 
         renderTodayStaffListArea(); 
 
         const currentDate = new Date(TARGET_YEAR, TARGET_MONTH - 1, TODAY);
@@ -469,7 +471,6 @@
 
           if (isClosed) {
              dayCell.className = `day-cell disabled`;
-             // 휴무일이라도 클릭 가능하게 이벤트를 줍니다 (0명으로 표시됨)
              dayCell.style.cursor = 'pointer';
              dayCell.innerHTML = `<div class="day-number" style="${dateColor}">${day}</div>
                                   <div class="summary-status closed">휴무</div>`;
@@ -481,16 +482,15 @@
                                   <div class="summary-status ${statusClass}">${statusText}</div>`;
           }
           
-          // 🔥 날짜 셀 클릭 시 명단 보기 함수 호출
           dayCell.addEventListener('click', () => window.showExpectedStaffList(dateKey, m, day));
           calendarGridEl.appendChild(dayCell);
         }
         return;
       }
 
-      // 🔥 2. 직원을 선택한 후: 개인 식수 O/X 달력 표시
+      // 2. 직원을 선택한 후: 개인 식수 O/X 달력 표시
       monthlyTotalBox.style.display = 'flex'; 
-      expectedStaffListContainer.style.display = 'none'; // 개인 모드에서는 명단 창 숨기기
+      expectedStaffListContainer.style.display = 'none'; 
       calendarCard.classList.remove('calendar-area-hidden'); 
       todayStaffContainer.style.display = 'none';
 
