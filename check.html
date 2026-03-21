@@ -11,9 +11,7 @@
     .max-w-7xl { max-width: 1200px; margin: 0 auto; }
     :root { --primary: #0d9488; --primary-light: #ccfbf1; --secondary: #f97316; --text-dark: #134e4a; }
     
-    /* 변경: align-items를 stretch로 변경하여 양쪽 상자의 높이를 강제로 동일하게 맞춤 */
     .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: stretch; margin-top: 20px; }
-    /* 변경: flex-col이 100% 높이를 가지도록 설정 */
     .flex-col { display: flex; flex-direction: column; gap: 24px; height: 100%; }
     
     .card { background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
@@ -31,26 +29,22 @@
     .consonant-group { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; overflow-x: visible; padding-bottom: 12px; margin-bottom: 12px; }
     .consonant-group::-webkit-scrollbar { height: 0; }
     
-    /* 변경: 초성 버튼 크기 확대 */
     .consonant-btn { flex-shrink: 0; padding: 10px 10px; border-radius: 20px; background: #f1f5f9; color: #64748b; font-weight: bold; font-size: 1.05rem; border: none; cursor: pointer; transition: 0.2s; outline: none; width: 100%; box-sizing: border-box; }
     .consonant-btn:active { background: #bae6fd; color: #0ea5e9; }
     .consonant-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 6px rgba(13, 148, 136, 0.3); }
     
     .search-empty { text-align: center; padding: 30px 20px; color: #94a3b8; font-weight: bold; background: #f8fafc; border-radius: 12px; margin-top: 10px; font-size: 0.98rem;}
     
-    /* 변경: 직원 목록이 길어질 경우 상자 크기가 틀어지지 않고 내부 스크롤이 생기도록 flex-grow 및 overflow 설정 */
     .staff-list-container { flex-grow: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: 10px; padding-right: 5px; }
     .staff-list-container::-webkit-scrollbar { width: 6px; }
     .staff-list-container::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
     
     .staff-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 100%; }
     
-    /* 변경: 직원 이름 셀 크기 확대 및 높이 맞춤 */
     .staff-item { flex-direction: column; justify-content: center; text-align: center; gap: 12px; min-width: 82px; padding: 16px 10px; border: 1px solid transparent; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; transition: 0.2s; border-radius: 12px; background: #f8fafc; box-sizing: border-box; }
     .staff-item.active { background: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(13, 148, 136, 0.3);}
     .staff-name { font-weight: bold; font-size: 1.05rem; word-break: keep-all; color: #1e293b; }
     
-    /* 변경: 뱃지 크기 확대 */
     .status-badge { background: #e2e8f0; color: #475569; padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; white-space: nowrap;}
     .status-badge.eating { background: var(--secondary); color: white; }
     
@@ -58,13 +52,17 @@
     .calendar-title { font-size: 1.05rem; font-weight: bold; color: var(--text-dark); }
     .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4.2px; text-align: center; }
     .weekday { font-weight: bold; color: #64748b; padding-bottom: 8px; font-size: 0.8rem;}
+    
     .day-cell { aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid #e2e8f0; border-radius: 8.4px; cursor: pointer; transition: 0.2s; position: relative; width: 94.5%; font-size: 0.997rem; min-width: 25.2px; min-height: 25.2px; margin: auto; }
     .day-number { font-size: 0.8925rem; font-weight: 600; margin-bottom: 2.1px; color: #334155;} 
+    
+    /* 개인 식수 달력용 O/X 상태 */
     .day-status { width: 20.79px; height: 20.79px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 0.70875rem; font-weight: bold; background: #f1f5f9; color: #cbd5e1; }
     .day-cell.checked { background-color: #fff7ed; border-color: #fed7aa; }
     .day-cell.checked .day-status { background-color: var(--secondary); color: white; }
     .day-cell.checked .day-status::after { content: 'O'; }
     .day-cell:not(.checked):not(.disabled) .day-status::after { content: 'X'; }
+    
     .day-cell.disabled { background-color: #f8fafc; border-color: #f1f5f9; cursor: not-allowed; }
     .day-cell.disabled .day-number { color: #cbd5e1 !important; }
     .day-cell.disabled .day-status { background: transparent; color: #94a3b8; font-size: 0.80325rem; width: auto; height: auto;}
@@ -72,6 +70,12 @@
     .day-cell.today { border: 2.1px solid var(--primary); }
     .day-cell.today::before { content: '오늘'; position: absolute; top: -6.3px; font-size: 0.61425rem; background: var(--primary); color: white; padding: 2.1px 5.25px; border-radius: 10.5px; font-weight: bold;}
     
+    /* 🔥 2주 전체 식수 인원용 스타일 (배경 투명, 글자 검정색) */
+    .summary-status { width: 32px; height: 32px; display: flex; justify-content: center; align-items: center; font-size: 0.85rem; font-weight: bold; margin-top: 2px; letter-spacing: -0.5px; }
+    .summary-status.has-count { background: transparent; color: #000000; font-size: 1rem; font-weight: 900; box-shadow: none; }
+    .summary-status.no-count { background: transparent; color: #94a3b8; }
+    .summary-status.closed { background: transparent; color: #94a3b8; font-size: 0.8rem; }
+
     .toast { position: fixed; bottom: 5vw; left: 4vw; right: 4vw; text-align: center; background: #334155; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; transform: translateY(150%); transition: 0.3s; z-index: 1000; max-width: 92vw;}
     .toast.show { transform: translateY(0); }
     #loadingOverlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: bold; color: var(--primary); font-size: 1.2rem; transition: 0.5s; }
@@ -83,19 +87,23 @@
     .reset-btn:active { background: #34d399; color: #065f46;}
     
     @media (max-width: 768px) {
-      body { padding: 4vw 4vw 10vw 4vw; height: auto; }
-      .grid-container { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; max-width: 100vw; }
-      .card { padding: 5vw 4vw; border-radius: 12px; min-width: 0; overflow: visible; box-sizing: border-box; width: 100%; height: auto; }
-      .flex-col { height: auto; }
+      body { padding: 4vw; height: auto; }
+      .grid-container { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; }
+      .card { padding: 20px 16px; border-radius: 12px; width: 100%; height: auto; }
+      .staff-list-container { max-height: 45vh; padding-right: 4px; }
+      .consonant-group { grid-template-columns: repeat(6, 1fr) !important; gap: 6px; margin-bottom: 12px; }
+      .consonant-btn { font-size: 1rem; padding: 8px 2px; border-radius: 12px; }
+      .staff-list { grid-template-columns: repeat(4, 1fr) !important; gap: 8px; }
+      .staff-item { padding: 12px 4px; gap: 8px; min-width: 0; border-radius: 10px; }
+      .staff-name { font-size: 0.9rem; }
+      .status-badge { padding: 4px 6px; font-size: 0.75rem; }
       .calendar-area { z-index: 1; }
       h1 { font-size: 1.2rem !important; }
       .calendar-grid { gap: 4px; } 
-      .day-cell { width: 100%; font-size: 0.95rem; min-width: auto; min-height: auto; } 
+      .day-cell { width: 100%; font-size: 0.95rem; min-width: auto; min-height: auto; border-radius: 6px; } 
       .day-number { font-size: 0.85rem; }
       .day-status { width: 22px; height: 22px; font-size: 0.7rem; }
-      .staff-list { grid-template-columns: repeat(4, 1fr) !important; }
-      .consonant-group { grid-template-columns: repeat(6, 1fr)!important; gap: 6px; }
-      .consonant-btn { font-size: 1.1rem; padding: 8px 0; }
+      .summary-status { width: 26px; height: 26px; font-size: 0.85rem; }
     }
   </style>
 </head>
@@ -144,7 +152,7 @@
 
       <div class="card calendar-area calendar-area-hidden" id="calendarCard">
         <div class="calendar-header">
-          <div class="calendar-title" id="calendarTitle">직원을 선택해주세요</div>
+          <div class="calendar-title" id="calendarTitle">금주/차주 예상 식수 인원</div>
           <div style="color: #64748b; font-weight: bold; font-size: 0.9rem;" id="calendarMonthText">2026년 3월</div>
         </div>
         
@@ -234,7 +242,6 @@
 
     function updateTodayLabel() {
       todayLabelEl.textContent = `오늘(${TODAY}일) 총 식사 인원`;
-      calendarMonthText.textContent = `${TARGET_YEAR}년 ${TARGET_MONTH}월`;
     }
     updateTodayLabel();
 
@@ -392,16 +399,81 @@
     }
 
     function renderCalendar() {
+      // 🔥 1. 직원을 선택하기 전: 금주/차주 예상 식수 인원 (2주치 달력) 표시
       if (!selectedStaffId) {
-        calendarCard.classList.remove('calendar-area-hidden'); calendarTitleEl.innerHTML = "직원을 선택해주세요"; calendarGridEl.innerHTML = '';
-        monthlyTotalCountEl.textContent = 0; monthlyTotalBox.classList.remove('active'); renderTodayStaffListArea(); return;
+        calendarCard.classList.remove('calendar-area-hidden'); 
+        calendarTitleEl.innerHTML = `<span style="color: var(--primary);">금주/차주</span> 예상 식수 인원`;
+        calendarGridEl.innerHTML = '';
+        
+        monthlyTotalCountEl.textContent = 0; 
+        monthlyTotalBox.style.display = 'none'; 
+        renderTodayStaffListArea(); 
+
+        const currentDate = new Date(TARGET_YEAR, TARGET_MONTH - 1, TODAY);
+        const startOfThisWeek = new Date(currentDate);
+        startOfThisWeek.setDate(currentDate.getDate() - currentDate.getDay()); 
+
+        const endOfNextWeek = new Date(startOfThisWeek);
+        endOfNextWeek.setDate(startOfThisWeek.getDate() + 13);
+        
+        calendarMonthText.textContent = `${startOfThisWeek.getMonth() + 1}월 ${startOfThisWeek.getDate()}일 ~ ${endOfNextWeek.getMonth() + 1}월 ${endOfNextWeek.getDate()}일`;
+
+        for (let i = 0; i < 14; i++) {
+          const d = new Date(startOfThisWeek);
+          d.setDate(startOfThisWeek.getDate() + i);
+          
+          const y = d.getFullYear();
+          const m = d.getMonth() + 1;
+          const day = d.getDate();
+          const dayIndex = d.getDay(); 
+          const dateKey = `${y}-${m}-${day}`;
+          
+          const monthKey = `${y}-${m}`;
+          const manualHolidays = manualHolidaysMap[monthKey] || [];
+          
+          const isPublicHoliday = (m === TARGET_MONTH) ? PUBLIC_HOLIDAYS.includes(day) : false;
+          const isManualHoliday = manualHolidays.includes(day);
+          const isClosed = (dayIndex === 0 || dayIndex === 6) || isPublicHoliday || isManualHoliday;
+          
+          let count = 0;
+          if (!isClosed) {
+            count = staffData.filter(staff => staff.attendance && staff.attendance[dateKey]).length;
+          }
+
+          const dayCell = document.createElement('div');
+          
+          let dateColor = '';
+          if(dayIndex === 0 || isPublicHoliday || isManualHoliday) dateColor = 'color: #fca5a5;'; 
+          else if(dayIndex === 6) dateColor = 'color: #93c5fd;'; 
+
+          const isToday = (y === TARGET_YEAR && m === TARGET_MONTH && day === TODAY);
+
+          if (isClosed) {
+             dayCell.className = `day-cell disabled`;
+             dayCell.innerHTML = `<div class="day-number" style="${dateColor}">${day}</div>
+                                  <div class="summary-status closed">휴무</div>`;
+          } else {
+             dayCell.className = `day-cell ${count > 0 ? 'checked' : ''} ${isToday ? 'today' : ''}`;
+             const statusClass = count > 0 ? 'has-count' : 'no-count';
+             const statusText = count > 0 ? `${count}명` : '0명';
+             dayCell.innerHTML = `<div class="day-number">${day}</div>
+                                  <div class="summary-status ${statusClass}">${statusText}</div>`;
+          }
+          calendarGridEl.appendChild(dayCell);
+        }
+        return;
       }
-      calendarCard.classList.remove('calendar-area-hidden'); todayStaffContainer.style.display = 'none';
+
+      // 🔥 2. 직원을 선택한 후: 개인 식수 O/X 달력 표시
+      monthlyTotalBox.style.display = 'flex'; 
+      calendarCard.classList.remove('calendar-area-hidden'); 
+      todayStaffContainer.style.display = 'none';
 
       const staff = staffData.find(s => s.id === selectedStaffId);
       if(!staff) return;
 
       calendarTitleEl.innerHTML = `<span style="color: var(--primary);">${staff.name}</span>님의 이번 달 식사`;
+      calendarMonthText.textContent = `${TARGET_YEAR}년 ${TARGET_MONTH}월`;
       calendarGridEl.innerHTML = '';
       let monthlyCheckedCount = 0;
 
