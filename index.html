@@ -54,6 +54,10 @@
     .cell-subtotal { background: #f1f5f9; font-weight: bold; color: var(--text-dark); }
     .toast { position: fixed; bottom: 20px; right: 20px; background: #334155; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; transform: translateY(150%); transition: 0.3s; z-index: 1000;}
     .toast.show { transform: translateY(0); }
+    .holiday-toggle-btn { padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .holiday-toggle-btn.active { border: 1px solid #fca5a5; background: #fee2e2; color: #ef4444; }
+    .holiday-toggle-btn.inactive { border: 1px solid #cbd5e1; background: white; color: #475569; }
+    .holiday-toggle-btn:hover { transform: translateY(-1px); }
   </style>
 </head>
 <body>
@@ -94,7 +98,13 @@
             </div>
           </div>
         </div>
-        <div style="margin-bottom: 15px; color: #64748b; font-size: 0.85rem;">💡 주말 및 공휴일을 제외한 <strong>실제 평일</strong>만 표시됩니다.</div>
+        <div style="margin-bottom: 10px; color: #64748b; font-size: 0.85rem;">💡 주말 및 공휴일을 제외한 <strong>실제 평일</strong>만 표시됩니다.</div>
+        
+        <div style="margin-bottom: 16px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px;">
+          <div style="font-size: 0.85rem; font-weight: bold; color: #475569; margin-bottom: 8px;">🗓 수동 휴무일 설정 (버튼 클릭 시 아래 식수 대장에서 해당일이 사라집니다)</div>
+          <div id="holidayTogglesContainer" style="display: flex; gap: 6px; flex-wrap: wrap;"></div>
+        </div>
+
         <div class="table-container">
           <table>
             <thead id="statsTableHead" style="position: sticky; top: 0; z-index: 2;"></thead>
@@ -105,14 +115,12 @@
     </div>
   </div>
 
-  <!-- xlsx 라이브러리 CDN -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // ❗️ 여기에 기획자님의 Firebase 설정값을 덮어쓰세요!
     const firebaseConfig = {
         apiKey: "AIzaSyB3G_qPJCu-J754PLBB0zETPsWIB8wi4H0",
         authDomain: "lunch-check-app-temp.firebaseapp.com",
@@ -129,9 +137,10 @@
 
     let viewYear = 2026;
     let viewMonth = 3;
-    let PUBLIC_HOLIDAYS = [1, 2]; // 기본 휴일 설정
+    let PUBLIC_HOLIDAYS = [1, 2]; 
 
     let adminStaffData = [];
+    let manualHolidaysMap = {}; // 🔥 수동 휴무일 데이터 맵
 
     const adminStaffListEl = document.getElementById('adminStaffList');
     const statsTableHeadEl = document.getElementById('statsTableHead');
@@ -139,6 +148,7 @@
     const staffCountEl = document.getElementById('staffCount');
     const currentMonthTextEl = document.getElementById('currentMonthText');
     const toastMessage = document.getElementById('toastMessage');
+    const holidayTogglesContainer = document.getElementById('holidayTogglesContainer');
 
     function listenToDB() {
       onSnapshot(collection(db, "staff"), (snapshot) => {
@@ -150,6 +160,18 @@
       });
     }
 
+    // 🔥 추가: 수동 휴무일 DB 수신
+    function listenToHolidays() {
+      onSnapshot(doc(db, "settings", "holidays"), (docSnap) => {
+        if (docSnap.exists()) {
+          manualHolidaysMap = docSnap.data();
+        } else {
+          manualHolidaysMap = {};
+        }
+        renderStatsTable();
+      });
+    }
+
     window.addStaff = async function() {
       const nameInput = document.getElementById('newName');
       const name = nameInput.value.trim();
@@ -158,11 +180,7 @@
       const newId = "staff_" + Date.now();
       const newOrder = adminStaffData.length > 0 ? (adminStaffData[0].order || 0) - 1 : 0; 
 
-      const newStaff = {
-        name: name,
-        order: newOrder,
-        attendance: {} // 🔥 새 직원은 깨끗한 객체로 생성!
-      };
+      const newStaff = { name: name, order: newOrder, attendance: {} };
       
       try {
         await setDoc(doc(db, "staff", newId), newStaff);
@@ -189,6 +207,25 @@
       batch.update(doc(db, "staff", String(staffA.id)), { order: staffB.order || 0 });
       batch.update(doc(db, "staff", String(staffB.id)), { order: staffA.order || 0 });
       try { await batch.commit(); } catch(e) { console.error("순서 변경 실패:", e); }
+    };
+
+    // 🔥 추가: 수동 휴무일 토글 기능
+    window.toggleManualHoliday = async function(day) {
+      const key = `${viewYear}-${viewMonth}`;
+      let currentHolidays = manualHolidaysMap[key] ? [...manualHolidaysMap[key]] : [];
+      
+      if (currentHolidays.includes(day)) {
+        currentHolidays = currentHolidays.filter(d => d !== day);
+      } else {
+        currentHolidays.push(day);
+      }
+      
+      try {
+        await setDoc(doc(db, "settings", "holidays"), {
+          [key]: currentHolidays
+        }, { merge: true });
+        showToast(`${day}일 휴무 설정이 ${currentHolidays.includes(day) ? '추가' : '해제'}되었습니다.`);
+      } catch(e) { console.error("휴무 설정 오류:", e); }
     };
 
     function renderAdminStaffList() {
@@ -229,9 +266,10 @@
     };
 
     function renderStatsTable() {
-      // 🔥 달력 일수를 완벽하게 계산 (check.html과 100% 동일)
       const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
       const firstDayIndex = new Date(viewYear, viewMonth - 1, 1).getDay();
+      const monthKey = `${viewYear}-${viewMonth}`;
+      const manualHolidays = manualHolidaysMap[monthKey] || [];
 
       let validDays = [];
       for (let day = 1; day <= daysInMonth; day++) {
@@ -239,22 +277,32 @@
         if (currentDayIndex !== 0 && currentDayIndex !== 6 && !PUBLIC_HOLIDAYS.includes(day)) validDays.push(day);
       }
 
+      // 🔥 토글 버튼 렌더링
+      let togglesHtml = '';
+      validDays.forEach(day => {
+        const isHoliday = manualHolidays.includes(day);
+        togglesHtml += `<button onclick="window.toggleManualHoliday(${day})" class="holiday-toggle-btn ${isHoliday ? 'active' : 'inactive'}">${day}일 ${isHoliday ? '(휴무)' : ''}</button>`;
+      });
+      holidayTogglesContainer.innerHTML = togglesHtml;
+
+      // 🔥 대장에 실제로 표시할 날짜 (수동 휴무일 제외)
+      const tableValidDays = validDays.filter(day => !manualHolidays.includes(day));
+
       let theadHtml = `<tr><th class="sticky-col" style="min-width: 100px;">이름</th>`;
-      validDays.forEach(day => { theadHtml += `<th style="min-width: 45px;">${day}일</th>`; });
+      tableValidDays.forEach(day => { theadHtml += `<th style="min-width: 45px;">${day}일</th>`; });
       theadHtml += `<th style="min-width: 60px; color: var(--primary);">소계</th></tr>`;
       statsTableHeadEl.innerHTML = theadHtml;
 
       let tbodyHtml = '';
       let dailyTotals = {};
-      validDays.forEach(day => dailyTotals[day] = 0);
+      tableValidDays.forEach(day => dailyTotals[day] = 0);
       let grandTotal = 0; 
 
       adminStaffData.forEach(staff => {
         let personalSubTotal = 0;
         tbodyHtml += `<tr><td class="sticky-col">${staff.name}</td>`;
         
-        validDays.forEach(day => {
-          // 🔥 여기서도 완벽하게 동일한 날짜 Key로 매칭 확인!
+        tableValidDays.forEach(day => {
           const dateKey = `${viewYear}-${viewMonth}-${day}`;
           const isEating = staff.attendance ? staff.attendance[dateKey] : false; 
           
@@ -271,7 +319,7 @@
       });
 
       let tfootHtml = `<tr style="background: var(--primary-light);"><td class="sticky-col" style="background: var(--primary-light); color: var(--text-dark);">일일 총계</td>`;
-      validDays.forEach(day => { tfootHtml += `<td style="font-weight: bold; color: var(--primary);">${dailyTotals[day]}</td>`; });
+      tableValidDays.forEach(day => { tfootHtml += `<td style="font-weight: bold; color: var(--primary);">${dailyTotals[day]}</td>`; });
       tfootHtml += `<td style="font-weight: 900; font-size: 1.1rem; color: var(--danger);">${grandTotal}</td></tr>`;
 
       statsTableBodyEl.innerHTML = tbodyHtml + tfootHtml;
@@ -286,28 +334,31 @@
       if (e.key === 'Enter') window.addStaff();
     });
 
-    // 엑셀 다운로드 기능
     document.getElementById('excelDownloadBtn').addEventListener('click', function() {
-      // 월간 식수 대장 데이터를 엑셀로 변환
       const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
       const firstDayIndex = new Date(viewYear, viewMonth - 1, 1).getDay();
+      const monthKey = `${viewYear}-${viewMonth}`;
+      const manualHolidays = manualHolidaysMap[monthKey] || [];
+
       let validDays = [];
       for (let day = 1; day <= daysInMonth; day++) {
         const currentDayIndex = (day - 1 + firstDayIndex) % 7;
         if (currentDayIndex !== 0 && currentDayIndex !== 6 && !PUBLIC_HOLIDAYS.includes(day)) validDays.push(day);
       }
       
-      // 헤더 작성
-      const header = ["이름", ...validDays.map(day => `${day}일`), "소계"];
+      // 🔥 엑셀 다운로드 시에도 대장과 동일하게 수동 휴무일 제외
+      const tableValidDays = validDays.filter(day => !manualHolidays.includes(day));
+      
+      const header = ["이름", ...tableValidDays.map(day => `${day}일`), "소계"];
       const data = [];
       let dailyTotals = {};
-      validDays.forEach(day => dailyTotals[day] = 0);
+      tableValidDays.forEach(day => dailyTotals[day] = 0);
       let grandTotal = 0;
 
       for (const staff of adminStaffData) {
         let personalSubTotal = 0;
         const row = [staff.name];
-        for (const day of validDays) {
+        for (const day of tableValidDays) {
           const dateKey = `${viewYear}-${viewMonth}-${day}`;
           const isEating = staff.attendance ? staff.attendance[dateKey] : false;
           if (isEating) {
@@ -323,37 +374,29 @@
         data.push(row);
       }
 
-      // 합계 행
       const totalRow = ["일일 총계"];
-      for (const day of validDays) {
+      for (const day of tableValidDays) {
         totalRow.push(dailyTotals[day]);
       }
       totalRow.push(grandTotal);
       data.push(totalRow);
 
-      // xlsx 라이브러리를 사용하여 워크북 생성
       /* global XLSX */
       const worksheet = XLSX.utils.aoa_to_sheet([header, ...data]);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "월간식수대장");
 
-      // 파일명: 2026_03_월간식수대장.xlsx
       const y = String(viewYear);
       const m = String(viewMonth).padStart(2, "0");
       const fileName = `${y}_${m}_월간식수대장.xlsx`;
-
-      // 브라우저에서는 C:\Temp로 저장 경로를 강제하는 것이 불가능합니다. 
-      // 대신 파일명 앞에 경로를 더해 저장을 시도할 수 있으나,
-      // 실제 다운로드 위치는 브라우저 설정에 따름을 안내합니다.
-      // (최대한 경로를 반영해 파일명을 변경)
       const filePathName = `C_Temp_${fileName}`;
 
       XLSX.writeFile(workbook, filePathName);
-
-      showToast("엑셀 파일을 다운로드했습니다.\n(실제 저장 경로는 브라우저 설정에 따라 다를 수 있습니다.)");
+      showToast("엑셀 파일을 다운로드했습니다.");
     });
 
     listenToDB();
+    listenToHolidays(); // 🔥 초기화 호출 추가
   </script>
 </body>
 </html>
