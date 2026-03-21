@@ -76,6 +76,10 @@
     .summary-status.no-count { background: transparent; color: #94a3b8; font-size: 0.8rem; }
     .summary-status.closed { background: transparent; color: #94a3b8; font-size: 0.75rem; }
 
+    /* 날짜 클릭 시 명단 배열용 클래스 추가 */
+    .expected-staff-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .expected-staff-item { padding: 6px 14px; border-radius: 20px; background: #ffffff; color: var(--primary); border: 1.5px solid var(--primary-light); font-size: 0.95rem; font-weight: bold; word-break: keep-all; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+
     .toast { position: fixed; bottom: 5vw; left: 4vw; right: 4vw; text-align: center; background: #334155; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; transform: translateY(150%); transition: 0.3s; z-index: 1000; max-width: 92vw;}
     .toast.show { transform: translateY(0); }
     #loadingOverlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: bold; color: var(--primary); font-size: 1.2rem; transition: 0.5s; }
@@ -104,9 +108,20 @@
       .day-number { font-size: 0.85rem; }
       .day-status { width: 22px; height: 22px; font-size: 0.7rem; }
       
-      /* 🔥 모바일용 식수 인원 글자 크기 더 축소 */
+      /* 모바일용 식수 인원 글자 크기 더 축소 */
       .summary-status { width: 26px; height: 26px; font-size: 0.75rem; }
       .summary-status.has-count { font-size: 0.75rem; }
+
+      /* 모바일에서 명단 클릭 시 무조건 4명이 1줄로 나오도록 Grid 적용 */
+      .expected-staff-grid { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 6px; }
+      .expected-staff-item { padding: 8px 2px !important; font-size: 0.85rem !important; border-radius: 10px !important; width: 100%; box-sizing: border-box; text-align: center; }
+
+      /* 🔥 모바일 레이아웃 순서 변경: 달력 영역을 '내 이름 선택하기' 상자 위로 배치 */
+      .flex-col { display: contents; }
+      .main-group { order: 1; }
+      #todayStaffContainer { order: 2; }
+      #calendarCard { order: 3; }
+      #selectNameCard { order: 4; }
     }
   </style>
 </head>
@@ -140,7 +155,7 @@
 
         <div id="todayStaffContainer" style="margin-bottom: 5px; text-align: center;"></div>
 
-        <div class="card" style="flex-grow: 1;">
+        <div class="card" id="selectNameCard" style="flex-grow: 1;">
           <h2 class="card-title" style="font-size: 1.1rem;">내 이름 선택하기</h2>
           <div class="consonant-group" id="consonantGroup"></div>
           
@@ -149,7 +164,7 @@
             <div id="emptyMessage" class="search-empty" style="display: none;">해당 초성의 직원이 없습니다. 😢</div>
           </div>
           
-          <button class="reset-btn" id="resetBtn">초기화 및 오늘 식사 인원 보기</button>
+          <button class="reset-btn" id="resetBtn">뒤로 가기(다른 직원 선택)</button>
         </div>
       </div>
 
@@ -181,8 +196,7 @@
         </div>
         
         <div style="margin-top: 15px; margin-bottom: 15px; text-align: center; color: #94a3b8; font-size: 0.85rem;">💡 휴무일(주말 및 공휴일, <strong>관리자 지정 휴일</strong>)은 쉽니다.</div>
-        <button class="reset-btn" id="calendarResetBtn">뒤로 가기 (다른 직원 선택)</button>
-      </div>
+        </div>
     </div>
   </div>
 
@@ -298,8 +312,8 @@
         expectedStaffListContainer.innerHTML = `<div style="color:#64748b; font-weight:bold; font-size:1.05rem;">${month}월 ${day}일 식사를 신청한 직원이 없습니다.</div>`;
       } else {
         let listHtml = `<div style="font-weight: bold; color: var(--text-dark); margin-bottom: 12px; font-size: 1.05rem;">🗓 ${month}월 ${day}일 식사 신청 명단 (${eatingStaff.length}명)</div>
-                        <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">` +
-          eatingStaff.map(staff => `<div style="padding:6px 14px; border-radius:20px; background:#ffffff; color:var(--primary); border:1.5px solid var(--primary-light); font-size:0.95rem; font-weight:bold; word-break:keep-all; box-shadow:0 2px 4px rgba(0,0,0,0.05);">${staff.name}</div>`).join('') + '</div>';
+                        <div class="expected-staff-grid">` +
+          eatingStaff.map(staff => `<div class="expected-staff-item">${staff.name}</div>`).join('') + `</div>`;
         expectedStaffListContainer.innerHTML = listHtml;
       }
       expectedStaffListContainer.style.display = 'block';
