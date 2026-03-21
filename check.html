@@ -167,6 +167,8 @@
         </div>
         <div class="calendar-grid" id="calendarGrid"></div>
         
+        <div id="expectedStaffListContainer" style="margin-top: 15px; display: none; background: #f0fdf4; padding: 16px; border-radius: 12px; border: 1px solid #bbf7d0; text-align: center; transition: 0.3s;"></div>
+        
         <div id="monthlyTotalBox" class="monthly-total-box">
           <span class="monthly-total-label">이번 달 나의 총 식사 신청 수</span>
           <div>
@@ -239,6 +241,7 @@
     const monthlyTotalBox = document.getElementById('monthlyTotalBox');
     const todayLabelEl = document.getElementById('todayLabel');
     const calendarMonthText = document.getElementById('calendarMonthText');
+    const expectedStaffListContainer = document.getElementById('expectedStaffListContainer'); // 🔥 명단 컨테이너
 
     function updateTodayLabel() {
       todayLabelEl.textContent = `오늘(${TODAY}일) 총 식사 인원`;
@@ -283,6 +286,21 @@
         await updateDoc(doc(db, "staff", String(staffId)), { attendance: newAttendance });
         showToast(`${staff.name}님의 ${TARGET_MONTH}월 ${day}일 식사가 ${newAttendance[dateKey] ? '등록' : '취소'}되었습니다.`);
       } catch (error) { showToast("오류가 발생했습니다."); }
+    };
+
+    // 🔥 특정 날짜 클릭 시 명단 표시 함수 추가
+    window.showExpectedStaffList = function(dateKey, month, day) {
+      const eatingStaff = staffData.filter(staff => staff.attendance && staff.attendance[dateKey]);
+      
+      if (eatingStaff.length === 0) {
+        expectedStaffListContainer.innerHTML = `<div style="color:#64748b; font-weight:bold; font-size:1.05rem;">${month}월 ${day}일 식사를 신청한 직원이 없습니다.</div>`;
+      } else {
+        let listHtml = `<div style="font-weight: bold; color: var(--text-dark); margin-bottom: 12px; font-size: 1.05rem;">🗓 ${month}월 ${day}일 식사 신청 명단 (${eatingStaff.length}명)</div>
+                        <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">` +
+          eatingStaff.map(staff => `<div style="padding:6px 14px; border-radius:20px; background:#ffffff; color:var(--primary); border:1.5px solid var(--primary-light); font-size:0.95rem; font-weight:bold; word-break:keep-all; box-shadow:0 2px 4px rgba(0,0,0,0.05);">${staff.name}</div>`).join('') + '</div>';
+        expectedStaffListContainer.innerHTML = listHtml;
+      }
+      expectedStaffListContainer.style.display = 'block';
     };
 
     async function fetchPublicHolidays(year, month) {
@@ -407,6 +425,7 @@
         
         monthlyTotalCountEl.textContent = 0; 
         monthlyTotalBox.style.display = 'none'; 
+        expectedStaffListContainer.style.display = 'none'; // 달력 렌더링 시 명단 초기화
         renderTodayStaffListArea(); 
 
         const currentDate = new Date(TARGET_YEAR, TARGET_MONTH - 1, TODAY);
@@ -450,6 +469,8 @@
 
           if (isClosed) {
              dayCell.className = `day-cell disabled`;
+             // 휴무일이라도 클릭 가능하게 이벤트를 줍니다 (0명으로 표시됨)
+             dayCell.style.cursor = 'pointer';
              dayCell.innerHTML = `<div class="day-number" style="${dateColor}">${day}</div>
                                   <div class="summary-status closed">휴무</div>`;
           } else {
@@ -459,6 +480,9 @@
              dayCell.innerHTML = `<div class="day-number">${day}</div>
                                   <div class="summary-status ${statusClass}">${statusText}</div>`;
           }
+          
+          // 🔥 날짜 셀 클릭 시 명단 보기 함수 호출
+          dayCell.addEventListener('click', () => window.showExpectedStaffList(dateKey, m, day));
           calendarGridEl.appendChild(dayCell);
         }
         return;
@@ -466,6 +490,7 @@
 
       // 🔥 2. 직원을 선택한 후: 개인 식수 O/X 달력 표시
       monthlyTotalBox.style.display = 'flex'; 
+      expectedStaffListContainer.style.display = 'none'; // 개인 모드에서는 명단 창 숨기기
       calendarCard.classList.remove('calendar-area-hidden'); 
       todayStaffContainer.style.display = 'none';
 
