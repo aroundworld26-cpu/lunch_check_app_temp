@@ -34,10 +34,34 @@
     .monthly-total-box.active { background: #fff7ed; border-color: #fed7aa; }
     .monthly-total-label { font-weight: bold; color: var(--text-dark); font-size: 1.05rem;}
     .monthly-total-value { font-size: 1.8rem; font-weight: 800; color: var(--secondary); line-height: 1;}
-    .consonant-group { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; scrollbar-width: thin; scrollbar-color: #cbd5e1 #f8fafc; -webkit-overflow-scrolling: touch; }
-    .consonant-group::-webkit-scrollbar { height: 4px; }
+    /* 변경: .consonant-group을 6개씩 한 줄에 나오게 grid로 변경 */
+    .consonant-group { 
+      display: grid; 
+      grid-template-columns: repeat(6, 1fr); 
+      gap: 8px; 
+      overflow-x: visible; 
+      padding-bottom: 10px; 
+      margin-bottom: 10px; 
+      /* scroll 제거, 줄바꿈 허용 */
+    }
+    .consonant-group::-webkit-scrollbar { height: 0; }
     .consonant-group::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
-    .consonant-btn { flex-shrink: 0; padding: 6px 14px; border-radius: 20px; background: #f1f5f9; color: #64748b; font-weight: bold; font-size: 0.95rem; border: none; cursor: pointer; transition: 0.2s; outline: none; }
+    .consonant-btn { 
+      flex-shrink: 0; 
+      padding: 6px 14px; 
+      border-radius: 20px; 
+      background: #f1f5f9; 
+      color: #64748b; 
+      font-weight: bold; 
+      font-size: 0.95rem; 
+      border: none; 
+      cursor: pointer; 
+      transition: 0.2s; 
+      outline: none; 
+      width: 100%; 
+      /* grid일 때 버튼이 셀 넓이 채우도록 */
+      box-sizing: border-box;
+    }
     .consonant-btn:active { background: #bae6fd; color: #0ea5e9; }
     .consonant-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 6px rgba(13, 148, 136, 0.3); }
     .search-empty { text-align: center; padding: 30px 20px; color: #94a3b8; font-weight: bold; background: #f8fafc; border-radius: 12px; margin-top: 10px; font-size: 0.98rem;}
@@ -124,27 +148,36 @@
     @media (max-width: 768px) {
       body { padding: 4vw 4vw 10vw 4vw; height: auto; }
       .grid-container { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; max-width: 100vw; }
-      
+
       /* 모든 카드의 폭이 100%로 꽉 차게 유지되도록 설정 */
       .card { padding: 5vw 4vw; border-radius: 12px; min-width: 0; overflow: visible; box-sizing: border-box; transform: scale(1); width: 100%; }
-      
+
       /* 기존에 1.2배 확대되던 설정을 제거하여 폭을 동일하게 맞춤 */
       .calendar-area { 
         transform: scale(1) !important; 
         z-index: 1;
       }
-      
+
       h1 { font-size: 1.2rem !important; }
       .calendar-grid { gap: 4px; } /* 셀 사이 간격을 자연스럽게 조정 */
-      
+
       /* 날짜 셀이 카드 폭에 맞게 자동으로 꽉 차도록 100%로 변경 */
       .day-cell { width: 100%; font-size: 0.95rem; min-width: auto; min-height: auto; } 
       .day-number { font-size: 0.85rem; }
       .day-status { width: 22px; height: 22px; font-size: 0.7rem; }
-      
+
       /* 모바일에서도 4개씩! */
       .staff-list {
         grid-template-columns: repeat(4, 1fr) !important;
+      }
+      /* 모바일에서는 .consonant-group 줄바꿈 유지, 글자 큼 */
+      .consonant-group {
+        grid-template-columns: repeat(6, 1fr)!important; 
+        gap: 6px;
+      }
+      .consonant-btn {
+        font-size: 1.1rem;
+        padding: 6px 0;
       }
     }
   </style>
@@ -352,10 +385,13 @@
       return ['전체', ...sortedConsonants];
     }
 
+    // 변경: 초성 버튼을 6개씩 한줄에 표시 (div 단위 .consonant-group에서 grid로 처리됨, row 만들 필요 없이 내부 반복만 하면 됨)
     function renderConsonantButtons() {
       consonantGroupEl.innerHTML = '';
       const activeConsonants = getActiveConsonants();
       if (!activeConsonants.includes(selectedChosung)) selectedChosung = '전체';
+
+      // 한줄에 6개씩 grid로 자동 정렬(버튼만 append)
       activeConsonants.forEach(conso => {
         const btn = document.createElement('button');
         btn.className = `consonant-btn ${conso === selectedChosung ? 'active' : ''}`;
