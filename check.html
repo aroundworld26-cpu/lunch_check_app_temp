@@ -12,19 +12,7 @@
     :root { --primary: #0d9488; --primary-light: #ccfbf1; --secondary: #f97316; --text-dark: #134e4a; }
     .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; margin-top: 20px; }
     .flex-col { display: flex; flex-direction: column; gap: 24px; height: auto; }
-    .card {
-      background: #ffffff;
-      border-radius: 16px;
-      padding: 26.4px; /* 24px * 1.1 */
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
-      display: flex;
-      flex-direction: column;
-      transform: scale(1.1);
-      transform-origin: top left;
-    }
-    .calendar-area {
-      /* 기존 크기. 모바일에서 @media로 오버라이드 */
-    }
+    .card { background: #ffffff; border-radius: 16px; padding: 26.4px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; transform: scale(1.1); transform-origin: top left; }
     .card-title { font-size: 1.15rem; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 16px; border-bottom: 2px solid var(--primary-light); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
     .summary-box { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; background: var(--primary-light); padding: 16px 20px; border-radius: 12px; border: 1px solid #99f6e4;}
     .summary-label { font-size: 1rem; color: var(--primary); font-weight: 700; }
@@ -34,106 +22,34 @@
     .monthly-total-box.active { background: #fff7ed; border-color: #fed7aa; }
     .monthly-total-label { font-weight: bold; color: var(--text-dark); font-size: 1.05rem;}
     .monthly-total-value { font-size: 1.8rem; font-weight: 800; color: var(--secondary); line-height: 1;}
-    /* 변경: .consonant-group을 6개씩 한 줄에 나오게 grid로 변경 */
-    .consonant-group { 
-      display: grid; 
-      grid-template-columns: repeat(6, 1fr); 
-      gap: 8px; 
-      overflow-x: visible; 
-      padding-bottom: 10px; 
-      margin-bottom: 10px; 
-      /* scroll 제거, 줄바꿈 허용 */
-    }
+    .consonant-group { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; overflow-x: visible; padding-bottom: 10px; margin-bottom: 10px; }
     .consonant-group::-webkit-scrollbar { height: 0; }
     .consonant-group::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
-    .consonant-btn { 
-      flex-shrink: 0; 
-      padding: 6px 14px; 
-      border-radius: 20px; 
-      background: #f1f5f9; 
-      color: #64748b; 
-      font-weight: bold; 
-      font-size: 0.95rem; 
-      border: none; 
-      cursor: pointer; 
-      transition: 0.2s; 
-      outline: none; 
-      width: 100%; 
-      /* grid일 때 버튼이 셀 넓이 채우도록 */
-      box-sizing: border-box;
-    }
+    .consonant-btn { flex-shrink: 0; padding: 6px 14px; border-radius: 20px; background: #f1f5f9; color: #64748b; font-weight: bold; font-size: 0.95rem; border: none; cursor: pointer; transition: 0.2s; outline: none; width: 100%; box-sizing: border-box; }
     .consonant-btn:active { background: #bae6fd; color: #0ea5e9; }
     .consonant-btn.active { background: var(--primary); color: white; box-shadow: 0 2px 6px rgba(13, 148, 136, 0.3); }
     .search-empty { text-align: center; padding: 30px 20px; color: #94a3b8; font-weight: bold; background: #f8fafc; border-radius: 12px; margin-top: 10px; font-size: 0.98rem;}
     .staff-list-container { overflow-y: visible; max-height: none; overflow-x: auto; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
-    /* 직원 한 줄에 4명: grid 사용 */
-    .staff-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      width: 100%;
-      padding-right: 20px;
-    }
-    .staff-item {
-      flex-direction: column;
-      justify-content: center;
-      text-align: center;
-      gap: 8px;
-      min-width: 82px;
-      padding: 12px 10px;
-      border: 1px solid transparent;
-      border-bottom: 1px solid #f1f5f9;
-      cursor: pointer;
-      display: flex;
-      transition: 0.2s;
-      border-radius: 12px;
-      background: #f8fafc;
-      font-size: 0.98rem;
-      /* grid 자동 줄바꿈 대응 */
-      box-sizing: border-box;
-    }
+    .staff-list { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 100%; padding-right: 20px; }
+    .staff-item { flex-direction: column; justify-content: center; text-align: center; gap: 8px; min-width: 82px; padding: 12px 10px; border: 1px solid transparent; border-bottom: 1px solid #f1f5f9; cursor: pointer; display: flex; transition: 0.2s; border-radius: 12px; background: #f8fafc; font-size: 0.98rem; box-sizing: border-box; }
     .staff-item.active { background: var(--primary); color: white; border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(13, 148, 136, 0.3);}
     .staff-name { font-weight: 600; font-size: 0.95rem; word-break: keep-all; }
     .status-badge { background: #e2e8f0; color: #475569; padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; white-space: nowrap;}
     .status-badge.eating { background: var(--secondary); color: white; }
     .calendar-header { display: flex; justify-content: space-between; align-items: flex-start; flex-direction: column; gap: 6px; margin-bottom: 12px;}
     .calendar-title { font-size: 1.05rem; font-weight: bold; color: var(--text-dark); }
-    .calendar-grid {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 4.2px; /* 4px * 1.05 */
-      text-align: center;
-    }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4.2px; text-align: center; }
     .weekday { font-weight: bold; color: #64748b; padding-bottom: 8px; font-size: 0.8rem;}
-    .day-cell { 
-      aspect-ratio: 1; 
-      display: flex; flex-direction: column; justify-content: center; align-items: center; 
-      border: 1px solid #e2e8f0; border-radius: 8.4px; /* 8px * 1.05 */
-      cursor: pointer; transition: 0.2s; 
-      position: relative; 
-      width: 94.5%; /* 90% * 1.05 */
-      font-size: 0.997rem; /* 0.95rem * 1.05 참고(기존 0.86/0.9)*1.05 = 약 0.997 */
-      min-width: 25.2px; /* 24px * 1.05 */
-      min-height: 25.2px;
-      margin: auto;
-    }
-    .day-number { font-size: 0.8925rem; font-weight: 600; margin-bottom: 2.1px; color: #334155;} /* 0.85rem * 1.05 */
-    .day-status { 
-      width: 20.79px; height: 20.79px; /* 19.8px * 1.05 */
-      border-radius: 50%; display: flex; justify-content: center; align-items: center; 
-      font-size: 0.70875rem; /* 0.675rem * 1.05 */
-      font-weight: bold; background: #f1f5f9; color: #cbd5e1; 
-    }
+    .day-cell { aspect-ratio: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; border: 1px solid #e2e8f0; border-radius: 8.4px; cursor: pointer; transition: 0.2s; position: relative; width: 94.5%; font-size: 0.997rem; min-width: 25.2px; min-height: 25.2px; margin: auto; }
+    .day-number { font-size: 0.8925rem; font-weight: 600; margin-bottom: 2.1px; color: #334155;} 
+    .day-status { width: 20.79px; height: 20.79px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 0.70875rem; font-weight: bold; background: #f1f5f9; color: #cbd5e1; }
     .day-cell.checked { background-color: #fff7ed; border-color: #fed7aa; }
     .day-cell.checked .day-status { background-color: var(--secondary); color: white; }
     .day-cell.checked .day-status::after { content: 'O'; }
     .day-cell:not(.checked):not(.disabled) .day-status::after { content: 'X'; }
     .day-cell.disabled { background-color: #f8fafc; border-color: #f1f5f9; cursor: not-allowed; }
     .day-cell.disabled .day-number { color: #cbd5e1 !important; }
-    .day-cell.disabled .day-status { background: transparent; color: #94a3b8; font-size: 0.80325rem; width: auto; height: auto;} /* 0.765*1.05 */
+    .day-cell.disabled .day-status { background: transparent; color: #94a3b8; font-size: 0.80325rem; width: auto; height: auto;}
     .day-cell.disabled .day-status::after { content: '휴무'; } 
     .day-cell.today { border: 2.1px solid var(--primary); }
     .day-cell.today::before { content: '오늘'; position: absolute; top: -6.3px; font-size: 0.61425rem; background: var(--primary); color: white; padding: 2.1px 5.25px; border-radius: 10.5px; font-weight: bold;}
@@ -148,37 +64,16 @@
     @media (max-width: 768px) {
       body { padding: 4vw 4vw 10vw 4vw; height: auto; }
       .grid-container { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; max-width: 100vw; }
-
-      /* 모든 카드의 폭이 100%로 꽉 차게 유지되도록 설정 */
       .card { padding: 5vw 4vw; border-radius: 12px; min-width: 0; overflow: visible; box-sizing: border-box; transform: scale(1); width: 100%; }
-
-      /* 기존에 1.2배 확대되던 설정을 제거하여 폭을 동일하게 맞춤 */
-      .calendar-area { 
-        transform: scale(1) !important; 
-        z-index: 1;
-      }
-
+      .calendar-area { transform: scale(1) !important; z-index: 1; }
       h1 { font-size: 1.2rem !important; }
-      .calendar-grid { gap: 4px; } /* 셀 사이 간격을 자연스럽게 조정 */
-
-      /* 날짜 셀이 카드 폭에 맞게 자동으로 꽉 차도록 100%로 변경 */
+      .calendar-grid { gap: 4px; } 
       .day-cell { width: 100%; font-size: 0.95rem; min-width: auto; min-height: auto; } 
       .day-number { font-size: 0.85rem; }
       .day-status { width: 22px; height: 22px; font-size: 0.7rem; }
-
-      /* 모바일에서도 4개씩! */
-      .staff-list {
-        grid-template-columns: repeat(4, 1fr) !important;
-      }
-      /* 모바일에서는 .consonant-group 줄바꿈 유지, 글자 큼 */
-      .consonant-group {
-        grid-template-columns: repeat(6, 1fr)!important; 
-        gap: 6px;
-      }
-      .consonant-btn {
-        font-size: 1.1rem;
-        padding: 6px 0;
-      }
+      .staff-list { grid-template-columns: repeat(4, 1fr) !important; }
+      .consonant-group { grid-template-columns: repeat(6, 1fr)!important; gap: 6px; }
+      .consonant-btn { font-size: 1.1rem; padding: 6px 0; }
     }
   </style>
 </head>
@@ -210,7 +105,6 @@
           </div>
         </div>
 
-        <!-- "오늘 식사 신청 직원 명단" 영역을 여기로 이동 -->
         <div id="todayStaffContainer" style="margin-bottom: 15px; text-align: center;"></div>
 
         <div class="card" style="flex-grow: 1;">
@@ -225,11 +119,9 @@
       </div>
 
       <div class="card calendar-area calendar-area-hidden" id="calendarCard">
-        <!-- 오늘 식사 신청 직원 명단 영역을 calendar-header보다 위로 위치! -->
-        <!-- <div id="todayStaffContainer" style="margin-bottom: 15px; text-align: center;"></div> -->
         <div class="calendar-header">
           <div class="calendar-title" id="calendarTitle">직원을 선택해주세요</div>
-          <div style="color: #64748b; font-weight: bold; font-size: 0.9rem;">2026년 3월</div>
+          <div style="color: #64748b; font-weight: bold; font-size: 0.9rem;" id="calendarMonthText">2026년 3월</div>
         </div>
         
         <div class="calendar-grid" style="margin-bottom: 8px;">
@@ -251,7 +143,7 @@
           </div>
         </div>
         
-        <div style="margin-top: 15px; text-align: center; color: #94a3b8; font-size: 0.85rem;">💡 휴무일(주말 및 공휴일)은 쉽니다.</div>
+        <div style="margin-top: 15px; text-align: center; color: #94a3b8; font-size: 0.85rem;">💡 휴무일(주말 및 공휴일, <strong>관리자 지정 휴일</strong>)은 쉽니다.</div>
         <button class="reset-btn" id="calendarResetBtn">뒤로 가기 (다른 직원 선택)</button>
       </div>
     </div>
@@ -261,7 +153,6 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, collection, doc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // ❗️ 여기에 기획자님의 Firebase 설정값을 덮어쓰세요!
     const firebaseConfig = {
         apiKey: "AIzaSyB3G_qPJCu-J754PLBB0zETPsWIB8wi4H0",
         authDomain: "lunch-check-app-temp.firebaseapp.com",
@@ -276,29 +167,27 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // 오늘 날짜 계산 - 한국 시간 기준
     function getTodayInfo() {
       const now = new Date();
-      // KST 시간 보정
       const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
       const KST_DIFF = 9 * 60 * 60000;
       const kstDate = new Date(utc + KST_DIFF);
 
       const year = kstDate.getFullYear();
-      const month = kstDate.getMonth() + 1; // 1~12
+      const month = kstDate.getMonth() + 1; 
       const date = kstDate.getDate();
       return { year, month, date };
     }
 
-    // 오늘 info 전역 변수 세팅
     const { year: TARGET_YEAR, month: TARGET_MONTH, date: TODAY } = getTodayInfo();
     let PUBLIC_HOLIDAYS = []; 
 
     const TODAY_KEY = `${TARGET_YEAR}-${TARGET_MONTH}-${TODAY}`;
-
     const CHOSUNG_LIST = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
     
     let staffData = [];
+    let manualHolidaysMap = {}; // 🔥 관리자 수동 휴무 데이터
+
     let selectedStaffId = null; 
     let selectedChosung = '전체'; 
 
@@ -316,13 +205,13 @@
     const mainGroupCards = document.getElementsByClassName('main-group');
     const monthlyTotalCountEl = document.getElementById('monthlyTotalCount');
     const monthlyTotalBox = document.getElementById('monthlyTotalBox');
-    const todayLabelEl = document.getElementById('todayLabel'); // 추가: 라벨 element
+    const todayLabelEl = document.getElementById('todayLabel');
+    const calendarMonthText = document.getElementById('calendarMonthText');
 
-    // < 오늘(19일) 총 식사 인원 > -> 동적으로 오늘 날짜 표시
     function updateTodayLabel() {
       todayLabelEl.textContent = `오늘(${TODAY}일) 총 식사 인원`;
+      calendarMonthText.textContent = `${TARGET_YEAR}년 ${TARGET_MONTH}월`;
     }
-    // 최초 1회
     updateTodayLabel();
 
     function listenToDB() {
@@ -338,6 +227,18 @@
         renderStaffList();
         renderCalendar();
         renderTodayStaffListArea();
+      });
+    }
+
+    // 🔥 추가: 관리자 수동 휴무일 DB 리스너
+    function listenToHolidays() {
+      onSnapshot(doc(db, "settings", "holidays"), (docSnap) => {
+        if (docSnap.exists()) {
+          manualHolidaysMap = docSnap.data();
+        } else {
+          manualHolidaysMap = {};
+        }
+        renderCalendar(); // 휴무일 변경 시 달력 즉시 리렌더링
       });
     }
 
@@ -385,13 +286,11 @@
       return ['전체', ...sortedConsonants];
     }
 
-    // 변경: 초성 버튼을 6개씩 한줄에 표시 (div 단위 .consonant-group에서 grid로 처리됨, row 만들 필요 없이 내부 반복만 하면 됨)
     function renderConsonantButtons() {
       consonantGroupEl.innerHTML = '';
       const activeConsonants = getActiveConsonants();
       if (!activeConsonants.includes(selectedChosung)) selectedChosung = '전체';
 
-      // 한줄에 6개씩 grid로 자동 정렬(버튼만 append)
       activeConsonants.forEach(conso => {
         const btn = document.createElement('button');
         btn.className = `consonant-btn ${conso === selectedChosung ? 'active' : ''}`;
@@ -408,7 +307,6 @@
     }
 
     function renderTodayStaffListArea() {
-      // 위치가 변경되어도 이 함수는 동일하게 동작, 단순 위치만 위로 이동함
       if (selectedStaffId !== null) { todayStaffContainer.style.display = 'none'; return; }
       const eatingToday = staffData.filter(staff => staff.attendance && staff.attendance[TODAY_KEY]);
       if (eatingToday.length === 0) {
@@ -422,12 +320,10 @@
       todayStaffContainer.style.display = 'block';
     }
 
-    // 직원명 4명씩 한 줄: grid를 위해 기존 코드를 수정
     function renderStaffList() {
       staffListEl.innerHTML = '';
 
       if(selectedStaffId !== null) {
-        // 직원이 선택되어 있을 때: 자신만 보여주기
         const staff = staffData.find(staff => staff.id === selectedStaffId);
         if (staff) {
           const li = document.createElement('li');
@@ -439,7 +335,6 @@
         } else {
           staffListEl.style.display = 'none';
         }
-        // 빈 메시지는 안보이게
         emptyMessage.style.display = 'none';
         return;
       }
@@ -489,14 +384,19 @@
 
       const daysInMonth = new Date(TARGET_YEAR, TARGET_MONTH, 0).getDate();
       const firstDayIndex = new Date(TARGET_YEAR, TARGET_MONTH - 1, 1).getDay();
+      
+      // 🔥 수동 휴무일 조회
+      const monthKey = `${TARGET_YEAR}-${TARGET_MONTH}`;
+      const manualHolidays = manualHolidaysMap[monthKey] || [];
 
       for(let i = 0; i < firstDayIndex; i++) calendarGridEl.appendChild(document.createElement('div'));
 
       for(let day = 1; day <= daysInMonth; day++) {
         const currentDayIndex = (day - 1 + firstDayIndex) % 7;
         const isWeekend = (currentDayIndex === 0 || currentDayIndex === 6); 
-        const isHoliday = PUBLIC_HOLIDAYS.includes(day);
-        const isClosed = isWeekend || isHoliday; 
+        const isPublicHoliday = PUBLIC_HOLIDAYS.includes(day);
+        const isManualHoliday = manualHolidays.includes(day); // 🔥 관리자 수동 휴일 체크
+        const isClosed = isWeekend || isPublicHoliday || isManualHoliday; // 🔥 조건 병합
 
         const dateKey = `${TARGET_YEAR}-${TARGET_MONTH}-${day}`;
         const isChecked = staff.attendance && staff.attendance[dateKey];
@@ -508,7 +408,8 @@
         if(isClosed) {
           dayCell.className = `day-cell disabled`;
           let dateColor = '';
-          if(currentDayIndex === 0 || isHoliday) dateColor = 'color: #fca5a5;'; 
+          // 🔥 수동 휴일도 빨간색으로 표기
+          if(currentDayIndex === 0 || isPublicHoliday || isManualHoliday) dateColor = 'color: #fca5a5;'; 
           else if(currentDayIndex === 6) dateColor = 'color: #93c5fd;'; 
           dayCell.innerHTML = `<div class="day-number" style="${dateColor}">${day}</div><div class="day-status"></div>`;
         } 
@@ -542,6 +443,7 @@
     async function initApp() {
       PUBLIC_HOLIDAYS = await fetchPublicHolidays(TARGET_YEAR, TARGET_MONTH);
       listenToDB();
+      listenToHolidays(); // 🔥 리스너 초기화
     }
     initApp();
   </script>
