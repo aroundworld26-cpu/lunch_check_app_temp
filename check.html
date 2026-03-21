@@ -80,8 +80,10 @@
     .expected-staff-grid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
     .expected-staff-item { padding: 6px 14px; border-radius: 20px; background: #ffffff; color: var(--primary); border: 1.5px solid var(--primary-light); font-size: 0.95rem; font-weight: bold; word-break: keep-all; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-    .toast { position: fixed; bottom: 5vw; left: 4vw; right: 4vw; text-align: center; background: #334155; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; transform: translateY(150%); transition: 0.3s; z-index: 1000; max-width: 92vw;}
-    .toast.show { transform: translateY(0); }
+    /* 🔥 Toast 메시지가 평소에 완전히 숨겨지도록 수정 */
+    .toast { position: fixed; bottom: 5vw; left: 4vw; right: 4vw; text-align: center; background: #334155; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; transform: translateY(150%); transition: 0.3s; z-index: 1000; max-width: 92vw; opacity: 0; visibility: hidden; pointer-events: none; }
+    .toast.show { transform: translateY(0); opacity: 1; visibility: visible; }
+    
     #loadingOverlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255,255,255,0.9); z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: bold; color: var(--primary); font-size: 1.2rem; transition: 0.5s; }
     .hidden { opacity: 0; pointer-events: none; }
     .calendar-area-hidden { display: none !important; }
@@ -116,7 +118,7 @@
       .expected-staff-grid { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 6px; }
       .expected-staff-item { padding: 8px 2px !important; font-size: 0.85rem !important; border-radius: 10px !important; width: 100%; box-sizing: border-box; text-align: center; }
 
-      /* 🔥 모바일 레이아웃 순서 변경: 달력 영역을 '내 이름 선택하기' 상자 위로 배치 */
+      /* 모바일 레이아웃 순서 변경: 달력 영역을 '내 이름 선택하기' 상자 위로 배치 */
       .flex-col { display: contents; }
       .main-group { order: 1; }
       #todayStaffContainer { order: 2; }
@@ -433,7 +435,6 @@
     }
 
     function renderCalendar() {
-      // 1. 직원을 선택하기 전: 금주/차주 예상 식수 인원 (2주치 달력) 표시
       if (!selectedStaffId) {
         calendarCard.classList.remove('calendar-area-hidden'); 
         calendarTitleEl.innerHTML = `<span style="color: var(--primary);">금주/차주</span> 예상 식수 인원`;
@@ -502,7 +503,6 @@
         return;
       }
 
-      // 2. 직원을 선택한 후: 개인 식수 O/X 달력 표시
       monthlyTotalBox.style.display = 'flex'; 
       expectedStaffListContainer.style.display = 'none'; 
       calendarCard.classList.remove('calendar-area-hidden'); 
@@ -570,7 +570,6 @@
 
     window.goToInitState = goToInitState;
     if (document.getElementById('resetBtn')) document.getElementById('resetBtn').addEventListener('click', goToInitState);
-    if (document.getElementById('calendarResetBtn')) document.getElementById('calendarResetBtn').addEventListener('click', goToInitState);
 
     async function initApp() {
       PUBLIC_HOLIDAYS = await fetchPublicHolidays(TARGET_YEAR, TARGET_MONTH);
