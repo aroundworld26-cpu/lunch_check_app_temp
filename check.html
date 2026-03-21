@@ -10,9 +10,14 @@
     body { background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #334155; margin: 0; padding: 20px; line-height: 1.5; min-height: 100dvh; }
     .max-w-7xl { max-width: 1200px; margin: 0 auto; }
     :root { --primary: #0d9488; --primary-light: #ccfbf1; --secondary: #f97316; --text-dark: #134e4a; }
-    .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; margin-top: 20px; }
+    
+    /* 변경: 상자 간격을 24px -> 30px로 살짝 넓히고 깔끔하게 배치 */
+    .grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; align-items: start; margin-top: 20px; }
     .flex-col { display: flex; flex-direction: column; gap: 24px; height: auto; }
-    .card { background: #ffffff; border-radius: 16px; padding: 26.4px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; transform: scale(1.1); transform-origin: top left; }
+    
+    /* 변경: 겹침의 원인이었던 transform: scale(1.1) 제거, padding 정상화 */
+    .card { background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+    
     .card-title { font-size: 1.15rem; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 16px; border-bottom: 2px solid var(--primary-light); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
     .summary-box { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; background: var(--primary-light); padding: 16px 20px; border-radius: 12px; border: 1px solid #99f6e4;}
     .summary-label { font-size: 1rem; color: var(--primary); font-weight: 700; }
@@ -64,8 +69,8 @@
     @media (max-width: 768px) {
       body { padding: 4vw 4vw 10vw 4vw; height: auto; }
       .grid-container { display: flex; flex-direction: column; gap: 16px; margin-top: 10px; max-width: 100vw; }
-      .card { padding: 5vw 4vw; border-radius: 12px; min-width: 0; overflow: visible; box-sizing: border-box; transform: scale(1); width: 100%; }
-      .calendar-area { transform: scale(1) !important; z-index: 1; }
+      .card { padding: 5vw 4vw; border-radius: 12px; min-width: 0; overflow: visible; box-sizing: border-box; width: 100%; }
+      .calendar-area { z-index: 1; }
       h1 { font-size: 1.2rem !important; }
       .calendar-grid { gap: 4px; } 
       .day-cell { width: 100%; font-size: 0.95rem; min-width: auto; min-height: auto; } 
@@ -186,7 +191,7 @@
     const CHOSUNG_LIST = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
     
     let staffData = [];
-    let manualHolidaysMap = {}; // 🔥 관리자 수동 휴무 데이터
+    let manualHolidaysMap = {}; 
 
     let selectedStaffId = null; 
     let selectedChosung = '전체'; 
@@ -230,7 +235,6 @@
       });
     }
 
-    // 🔥 추가: 관리자 수동 휴무일 DB 리스너
     function listenToHolidays() {
       onSnapshot(doc(db, "settings", "holidays"), (docSnap) => {
         if (docSnap.exists()) {
@@ -238,7 +242,7 @@
         } else {
           manualHolidaysMap = {};
         }
-        renderCalendar(); // 휴무일 변경 시 달력 즉시 리렌더링
+        renderCalendar(); 
       });
     }
 
@@ -385,7 +389,6 @@
       const daysInMonth = new Date(TARGET_YEAR, TARGET_MONTH, 0).getDate();
       const firstDayIndex = new Date(TARGET_YEAR, TARGET_MONTH - 1, 1).getDay();
       
-      // 🔥 수동 휴무일 조회
       const monthKey = `${TARGET_YEAR}-${TARGET_MONTH}`;
       const manualHolidays = manualHolidaysMap[monthKey] || [];
 
@@ -395,8 +398,8 @@
         const currentDayIndex = (day - 1 + firstDayIndex) % 7;
         const isWeekend = (currentDayIndex === 0 || currentDayIndex === 6); 
         const isPublicHoliday = PUBLIC_HOLIDAYS.includes(day);
-        const isManualHoliday = manualHolidays.includes(day); // 🔥 관리자 수동 휴일 체크
-        const isClosed = isWeekend || isPublicHoliday || isManualHoliday; // 🔥 조건 병합
+        const isManualHoliday = manualHolidays.includes(day); 
+        const isClosed = isWeekend || isPublicHoliday || isManualHoliday; 
 
         const dateKey = `${TARGET_YEAR}-${TARGET_MONTH}-${day}`;
         const isChecked = staff.attendance && staff.attendance[dateKey];
@@ -408,7 +411,6 @@
         if(isClosed) {
           dayCell.className = `day-cell disabled`;
           let dateColor = '';
-          // 🔥 수동 휴일도 빨간색으로 표기
           if(currentDayIndex === 0 || isPublicHoliday || isManualHoliday) dateColor = 'color: #fca5a5;'; 
           else if(currentDayIndex === 6) dateColor = 'color: #93c5fd;'; 
           dayCell.innerHTML = `<div class="day-number" style="${dateColor}">${day}</div><div class="day-status"></div>`;
@@ -443,7 +445,7 @@
     async function initApp() {
       PUBLIC_HOLIDAYS = await fetchPublicHolidays(TARGET_YEAR, TARGET_MONTH);
       listenToDB();
-      listenToHolidays(); // 🔥 리스너 초기화
+      listenToHolidays(); 
     }
     initApp();
   </script>
