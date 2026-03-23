@@ -17,8 +17,23 @@
     .card { background: #ffffff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
     
     .card-title { font-size: 1.15rem; font-weight: 700; color: var(--text-dark); margin-top: 0; margin-bottom: 16px; border-bottom: 2px solid var(--primary-light); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center;}
-    .summary-box { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; background: var(--primary-light); padding: 16px 20px; border-radius: 12px; border: 1px solid #99f6e4;}
-    .summary-label { font-size: 1rem; color: var(--primary); font-weight: 700; }
+    .summary-box { 
+    display: flex; 
+    flex-direction: row; /* 세로(column)에서 가로(row)로 변경 */
+    align-items: center; /* 높이 중앙 맞춤 */
+    justify-content: space-between; /* 양 끝으로 배치하거나 gap 사용 */
+    gap: 20px; /* 텍스트와 숫자 사이의 간격 */
+    background: var(--primary-light); 
+    padding: 16px 20px; 
+    border-radius: 12px; 
+    border: 1px solid #99f6e4;
+}
+.summary-value { 
+    font-size: 2.5rem; 
+    font-weight: 800; 
+    color: var(--primary); 
+    line-height: 1; 
+}
     .summary-value { font-size: 2.5rem; font-weight: 800; color: var(--primary); line-height: 1; }
     .total-staff { font-size: 1.1rem; color: #115e59; font-weight: bold; }
     .monthly-total-box { margin-top: 15px; padding: 16px 20px; background: #f8fafc; border-radius: 12px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; border: 2px dashed #cbd5e1; transition: 0.3s;}
@@ -386,7 +401,7 @@
         return;
       }
       let listHtml = '<div style="font-weight: bold; color: var(--secondary); margin-bottom: 10px; font-size: 1.01rem;">오늘 식사 신청 직원 명단</div><div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:3px;">' +
-        eatingToday.map(staff => `<div style="padding:6px 15px;border-radius:25px;background:#fef9c3;color:#a16207;border:1.5px solid #fde047;font-size:0.95rem; font-weight:600;word-break:keep-all;">${staff.name}</div>`).join('') + '</div>';
+        eatingToday.map(staff => `<div style="padding:6px 15px;border-radius:25px;background:#fef9c3;color:#000000;border:1.5px solid #fde047;font-size:0.95rem; font-weight:600;word-break:keep-all;">${staff.name}</div>`).join('') + '</div>';
       todayStaffContainer.innerHTML = listHtml;
       todayStaffContainer.style.display = 'block';
     }
