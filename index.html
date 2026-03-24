@@ -52,6 +52,11 @@
     .cell-o { color: var(--primary); font-weight: bold; }
     .cell-x { color: #cbd5e1; }
     .cell-subtotal { background: #f1f5f9; font-weight: bold; color: var(--text-dark); }
+    
+    /* ★ 추가: 관리자 권한 수정 가능한 셀 스타일 */
+    .clickable-cell { cursor: pointer; transition: background-color 0.2s; border-radius: 4px;}
+    .clickable-cell:hover { background-color: #e2e8f0; }
+    
     .toast { position: fixed; bottom: 20px; right: 20px; background: #334155; color: white; padding: 12px 24px; border-radius: 8px; font-weight: bold; transform: translateY(150%); transition: 0.3s; z-index: 1000;}
     .toast.show { transform: translateY(0); }
     .holiday-toggle-btn { padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
@@ -98,7 +103,9 @@
             </div>
           </div>
         </div>
-        <div style="margin-bottom: 10px; color: #64748b; font-size: 0.85rem;">💡 주말 및 공휴일을 제외한 <strong>실제 평일</strong>만 표시됩니다.</div>
+        <div style="margin-bottom: 10px; color: #64748b; font-size: 0.85rem;">
+          💡 주말 및 공휴일을 제외한 실제 평일만 표시됩니다. <strong>(표 안의 O/X를 클릭하면 즉시 수정됩니다)</strong>
+        </div>
         
         <div style="margin-bottom: 16px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px;">
           <div style="font-size: 0.85rem; font-weight: bold; color: #475569; margin-bottom: 8px;">🗓 수동 휴무일 설정 (버튼 클릭 시 아래 식수 대장에서 해당일이 사라집니다)</div>
@@ -119,7 +126,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, doc, setDoc, updateDoc, deleteDoc, onSnapshot, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyB3G_qPJCu-J754PLBB0zETPsWIB8wi4H0",
@@ -135,12 +142,13 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    let viewYear = 2026;
-    let viewMonth = 3;
-    let PUBLIC_HOLIDAYS = [1, 2]; 
+    const now = new Date();
+    let viewYear = now.getFullYear();
+    let viewMonth = now.getMonth() + 1;
+    let PUBLIC_HOLIDAYS = []; 
 
     let adminStaffData = [];
-    let manualHolidaysMap = {}; // 🔥 수동 휴무일 데이터 맵
+    let manualHolidaysMap = {}; 
 
     const adminStaffListEl = document.getElementById('adminStaffList');
     const statsTableHeadEl = document.getElementById('statsTableHead');
@@ -149,6 +157,23 @@
     const currentMonthTextEl = document.getElementById('currentMonthText');
     const toastMessage = document.getElementById('toastMessage');
     const holidayTogglesContainer = document.getElementById('holidayTogglesContainer');
+
+    async function fetchPublicHolidays(year, month) {
+      const API_KEY = "발급받은_API_키를_여기에_입력하세요"; 
+      const monthStr = String(month).padStart(2, '0');
+      const url = `https://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo?solYear=${year}&solMonth=${monthStr}&ServiceKey=${API_KEY}&_type=json`;
+      try {
+        if (API_KEY.includes("발급받은_API_키를")) return []; 
+        const response = await fetch(url);
+        const json = await response.json();
+        const items = json.response?.body?.items?.item;
+        if (!items) return []; 
+        let holidays = [];
+        if (Array.isArray(items)) { holidays = items.filter(item => item.isHoliday === "Y").map(item => parseInt(String(item.locdate).slice(-2), 10)); } 
+        else if (items.isHoliday === "Y") { holidays.push(parseInt(String(items.locdate).slice(-2), 10)); }
+        return holidays;
+      } catch (error) { return []; }
+    }
 
     function listenToDB() {
       onSnapshot(collection(db, "staff"), (snapshot) => {
@@ -160,7 +185,6 @@
       });
     }
 
-    // 🔥 추가: 수동 휴무일 DB 수신
     function listenToHolidays() {
       onSnapshot(doc(db, "settings", "holidays"), (docSnap) => {
         if (docSnap.exists()) {
@@ -209,7 +233,6 @@
       try { await batch.commit(); } catch(e) { console.error("순서 변경 실패:", e); }
     };
 
-    // 🔥 추가: 수동 휴무일 토글 기능
     window.toggleManualHoliday = async function(day) {
       const key = `${viewYear}-${viewMonth}`;
       let currentHolidays = manualHolidaysMap[key] ? [...manualHolidaysMap[key]] : [];
@@ -226,6 +249,23 @@
         }, { merge: true });
         showToast(`${day}일 휴무 설정이 ${currentHolidays.includes(day) ? '추가' : '해제'}되었습니다.`);
       } catch(e) { console.error("휴무 설정 오류:", e); }
+    };
+
+    // ★ 추가: 관리자가 대장에서 O/X 셀을 클릭하여 식수 강제 수정
+    window.toggleAdminAttendance = async function(staffId, dateKey, currentStatus, staffName, day) {
+      const staff = adminStaffData.find(s => s.id === staffId);
+      if (!staff) return;
+
+      const newAttendance = { ...(staff.attendance || {}) };
+      newAttendance[dateKey] = !currentStatus; // 현재 상태의 반대로 변경
+
+      try {
+        await updateDoc(doc(db, "staff", String(staffId)), { attendance: newAttendance });
+        showToast(`${staffName} 직원의 ${day}일 식사가 ${!currentStatus ? 'O' : 'X'}로 수정되었습니다.`);
+      } catch (e) {
+        console.error(e);
+        showToast("수정 중 오류가 발생했습니다.");
+      }
     };
 
     function renderAdminStaffList() {
@@ -257,11 +297,14 @@
       renderStatsTable(); 
     }
 
-    window.changeMonth = function(delta) {
+    window.changeMonth = async function(delta) {
       viewMonth += delta;
       if(viewMonth > 12) { viewMonth = 1; viewYear++; }
       if(viewMonth < 1) { viewMonth = 12; viewYear--; }
+      
       currentMonthTextEl.textContent = `${viewYear}년 ${viewMonth}월`;
+      
+      PUBLIC_HOLIDAYS = await fetchPublicHolidays(viewYear, viewMonth);
       renderStatsTable();
     };
 
@@ -277,7 +320,6 @@
         if (currentDayIndex !== 0 && currentDayIndex !== 6 && !PUBLIC_HOLIDAYS.includes(day)) validDays.push(day);
       }
 
-      // 🔥 토글 버튼 렌더링
       let togglesHtml = '';
       validDays.forEach(day => {
         const isHoliday = manualHolidays.includes(day);
@@ -285,7 +327,6 @@
       });
       holidayTogglesContainer.innerHTML = togglesHtml;
 
-      // 🔥 대장에 실제로 표시할 날짜 (수동 휴무일 제외)
       const tableValidDays = validDays.filter(day => !manualHolidays.includes(day));
 
       let theadHtml = `<tr><th class="sticky-col" style="min-width: 100px;">이름</th>`;
@@ -306,11 +347,12 @@
           const dateKey = `${viewYear}-${viewMonth}-${day}`;
           const isEating = staff.attendance ? staff.attendance[dateKey] : false; 
           
+          // ★ 수정: 셀 클릭 시 toggleAdminAttendance 함수가 실행되도록 onclick 이벤트 추가 ★
           if(isEating) {
             personalSubTotal++; dailyTotals[day]++; 
-            tbodyHtml += `<td class="cell-o">O</td>`;
+            tbodyHtml += `<td class="cell-o clickable-cell" title="클릭하여 X로 변경" onclick="window.toggleAdminAttendance('${staff.id}', '${dateKey}', true, '${staff.name}', ${day})">O</td>`;
           } else {
-            tbodyHtml += `<td class="cell-x">X</td>`;
+            tbodyHtml += `<td class="cell-x clickable-cell" title="클릭하여 O로 변경" onclick="window.toggleAdminAttendance('${staff.id}', '${dateKey}', false, '${staff.name}', ${day})">X</td>`;
           }
         });
         
@@ -346,7 +388,6 @@
         if (currentDayIndex !== 0 && currentDayIndex !== 6 && !PUBLIC_HOLIDAYS.includes(day)) validDays.push(day);
       }
       
-      // 🔥 엑셀 다운로드 시에도 대장과 동일하게 수동 휴무일 제외
       const tableValidDays = validDays.filter(day => !manualHolidays.includes(day));
       
       const header = ["이름", ...tableValidDays.map(day => `${day}일`), "소계"];
@@ -381,7 +422,6 @@
       totalRow.push(grandTotal);
       data.push(totalRow);
 
-      /* global XLSX */
       const worksheet = XLSX.utils.aoa_to_sheet([header, ...data]);
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "월간식수대장");
@@ -395,8 +435,14 @@
       showToast("엑셀 파일을 다운로드했습니다.");
     });
 
-    listenToDB();
-    listenToHolidays(); // 🔥 초기화 호출 추가
+    async function initAdminApp() {
+      currentMonthTextEl.textContent = `${viewYear}년 ${viewMonth}월`;
+      PUBLIC_HOLIDAYS = await fetchPublicHolidays(viewYear, viewMonth);
+      listenToDB();
+      listenToHolidays();
+    }
+    
+    initAdminApp();
   </script>
 </body>
 </html>
