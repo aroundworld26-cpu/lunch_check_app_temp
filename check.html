@@ -256,7 +256,7 @@
             <div class="weekday">수</div><div class="weekday">목</div><div class="weekday">금</div><div class="weekday" style="color: var(--primary);">토</div>
           </div>
           <div class="calendar-grid" id="nextMonthGrid"></div>
-          <div style="text-align: right; color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">* 다음 달 첫 1주까지만 미리 신청해주세요.</div>
+          <div style="text-align: right; color: #94a3b8; font-size: 0.8rem; margin-top: 8px;">* 다음 달은 첫 2주(14일)까지만 미리 신청할 수 있습니다.</div>
         </div>
         
         <div style="margin-top: 15px; margin-bottom: 15px; text-align: center; color: #94a3b8; font-size: 0.85rem;">💡 휴무일(주말 및 공휴일, <strong>관리자 지정 휴일</strong>)은 쉽니다.</div>
@@ -388,13 +388,12 @@
       expectedStaffListContainer.style.display = 'block';
     };
 
-    // ★ 수정: API 키 오류 또는 미입력 시 임시 반환값을 [1]에서 []로 변경
     async function fetchPublicHolidays(year, month) {
       const API_KEY = "발급받은_API_키를_여기에_입력하세요"; 
       const monthStr = String(month).padStart(2, '0');
       const url = `https://apis.data.go.kr/B090041/openapi/service/SpcdeInfoService/getRestDeInfo?solYear=${year}&solMonth=${monthStr}&ServiceKey=${API_KEY}&_type=json`;
       try {
-        if (API_KEY.includes("발급받은_API_키를")) return []; // 변경 완료
+        if (API_KEY.includes("발급받은_API_키를")) return []; 
         const response = await fetch(url);
         const json = await response.json();
         const items = json.response?.body?.items?.item;
@@ -403,7 +402,7 @@
         if (Array.isArray(items)) { holidays = items.filter(item => item.isHoliday === "Y").map(item => parseInt(String(item.locdate).slice(-2), 10)); } 
         else if (items.isHoliday === "Y") { holidays.push(parseInt(String(items.locdate).slice(-2), 10)); }
         return holidays;
-      } catch (error) { return []; } // 변경 완료
+      } catch (error) { return []; }
     }
 
     function getInitialConsonant(name) {
@@ -451,7 +450,7 @@
         return;
       }
 
-      let listHtml = '<div style="font-weight: bold; color: var(--secondary); margin-bottom: 10px; font-size: 1.01rem;">오늘 식사 신청 명단 (주방 확인용)</div>';
+      let listHtml = '<div style="font-weight: bold; color: var(--secondary); margin-bottom: 10px; font-size: 1.01rem;">오늘 식사 신청 명단 (클릭 시 확인 표시)</div>';
       listHtml += '<div style="display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-bottom:3px;" id="todayStaffListContainer"></div>';
       
       todayStaffContainer.innerHTML = listHtml;
@@ -503,9 +502,17 @@
           const isTodayEating = staff.attendance && staff.attendance[TODAY_KEY];
           li.className = `staff-item ${staff.id === selectedStaffId ? 'active' : ''}`;
           li.innerHTML = `<div><div class="staff-name">${staff.name}</div></div><div class="status-badge ${isTodayEating ? 'eating' : ''}">오늘 ${isTodayEating ? 'O' : 'X'}</div>`;
+          
+          // ★ 수정: 이름 클릭 시 스크롤을 맨 위로 올려주는 코드 추가 ★
           li.addEventListener('click', () => {
-            selectedStaffId = staff.id; showMainState(false); renderStaffList(); renderCalendar(); renderTodayStaffListArea(); 
+            selectedStaffId = staff.id; 
+            showMainState(false); 
+            renderStaffList(); 
+            renderCalendar(); 
+            renderTodayStaffListArea(); 
+            window.scrollTo({ top: 0, behavior: 'smooth' }); // 화면 맨 위로 부드럽게 스크롤
           });
+          
           staffListEl.appendChild(li);
         });
       }
@@ -532,7 +539,6 @@
       const personalContainer = document.getElementById('personalViewContainer');
 
       if (!selectedStaffId) {
-        // [1. 직원 미선택 시 - 금주/차주 예상 인원 표시]
         calendarCard.classList.remove('calendar-area-hidden'); 
         calendarTitleEl.innerHTML = `<span style="color: var(--primary);">금주/차주</span> 예상 식수 인원`;
         
@@ -608,7 +614,6 @@
         return;
       }
 
-      // [2. 직원 선택 시 - 개인 식수 관리 (이번 달 + 다음 달 2주)]
       monthlyTotalBox.style.display = 'flex'; 
       expectedStaffListContainer.style.display = 'none'; 
       calendarCard.classList.remove('calendar-area-hidden'); 
